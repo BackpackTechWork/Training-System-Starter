@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate Training Package</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    :root {
+      --light: #EAEAEA;
+      --purple: #573FD7;
+      --blue: #11358B;
+      --orange: #E48F24;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, var(--purple), var(--blue));
+      color: var(--light);
+      min-height: 100vh;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* Main container */
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
+      background-color: var(--purple);
+      color: white;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    /* Content */
+    .content {
+      padding: 1.5rem;
+    }
+
+    /* Form styles */
+    .form-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(87, 63, 215, 0.2);
+    }
+
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Trainees section */
+    .trainees-section {
+      margin-top: 1.5rem;
+    }
+
+    .trainees-header {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .select-all {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #333;
+    }
+
+    /* Table styles */
+    .table-container {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .table-scroll {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background-color: #f5f5f5;
+      position: sticky;
+      top: 0;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      color: #333;
+    }
+
+    th {
+      font-weight: 600;
+    }
+
+    tbody tr {
+      border-top: 1px solid #eee;
+    }
+
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    /* Result message */
+    .result {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    .result-success {
+      background-color: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .result-error {
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .result-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #333;
+    }
+
+    .download-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--orange);
+      text-decoration: none;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    .download-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Button styles */
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--orange);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #d07d1f;
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Icons */
+    .icon {
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      stroke-width: 0;
+      stroke: currentColor;
+      fill: currentColor;
+    }
+
+    .icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .icon-play {
+      color: var(--orange);
+    }
+
+    .icon-success {
+      color: #34D399;
+    }
+
+    .icon-error {
+      color: #EF4444;
+    }
+
+    /* Progress Bar Styles - NEW */
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .progress-container {
+      margin: 15px 0;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 20px;
+      background: linear-gradient(to right, #e0e0e0, #e0e0e0);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, var(--orange), var(--purple));
+      border-radius: 10px;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%
+      );
+      background-size: 30px 30px;
+      animation: progress-animation 1s linear infinite;
+      z-index: 1;
+    }
+
+    .progress-percentage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #333;
+      font-weight: bold;
+      z-index: 2;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
+    }
+
+    .progress-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .progress-stage {
+      font-weight: 600;
+      color: var(--purple);
+      margin-bottom: 5px;
+    }
+
+    .progress-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: var(--purple);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes progress-animation {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 30px 0;
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .progress-steps::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background-color: #e0e0e0;
+      z-index: 1;
+    }
+
+    .step {
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step.active {
+      background-color: var(--purple);
+    }
+
+    .step.completed {
+      background-color: var(--orange);
+    }
+
+    .step-label {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 0.8rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="header-title" style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-bolt"></i>
+        <strong>Generate Training Package</strong>
+      </h1>
+    </div>
+    
+    <div class="content">
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="affiliatedCompany" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              Affiliated Company
+            </label>
+            <select id="affiliatedCompany" class="form-control" required>
+              <option value="">Select Company</option>
+              <option value="Company 1">Company 1</option>
+              <option value="Company 2">Company 2</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="hospitalName" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+              Hospital Name
+            </label>
+            <select id="hospitalName" class="form-control" required>
+              <option value="">Loading hospitals...</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="kLaserModel" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              K-Laser Model
+            </label>
+            <select id="kLaserModel" class="form-control" required>
+              <option value="">Loading models...</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="recipientName" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Recipient's Name
+            </label>
+            <input type="text" id="recipientName" class="form-control" required>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="address" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              Address
+            </label>
+            <textarea id="address" class="form-control" required></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="recipientPhone" class="form-label">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              Recipient's Phone Number
+            </label>
+            <input type="text" id="recipientPhone" class="form-control" pattern="[0-9+\-]+" required>
+          </div>
+        </div>
+        
+        <div class="trainees-section">
+          <h2 class="trainees-header">Trainees</h2>
+          
+          <div class="search-container">
+            <div class="search-box">
+              <svg class="icon icon-sm search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="searchTrainees" class="search-input" placeholder="Search trainees...">
+            </div>
+            
+            <div class="select-all">
+              <input type="checkbox" id="selectAll">
+              <label for="selectAll">Select All</label>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <div class="table-scroll">
+              <table id="traineesTable">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;">Select</th>
+                    <th>Trainee Name</th>
+                    <th>IC/Passport</th>
+                  </tr>
+                </thead>
+                <tbody id="traineesTableBody">
+                  <tr>
+                    <td colspan="3" style="text-align: center;">Loading trainees...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- New Progress Bar UI -->
+        <div id="loading" class="loading">
+          <div class="progress-icon">
+            <i class="fas fa-file-medical"></i>
+          </div>
+          <div class="progress-stage" id="currentStage">Preparing Training Package</div>
+          
+          <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-percentage" id="progressPercentage"><strong>0%</strong></div>
+              </div>
+          </div>
+          
+          <div class="progress-details">
+            <div id="timeRemaining">Estimated time: Calculating...</div>
+            <div id="filesProcessed">Processing: 0/0 files</div>
+          </div>
+          
+          <div class="progress-steps">
+            <div class="step active" id="step1">
+              1
+              <div class="step-label">Preparation</div>
+            </div>
+            <div class="step" id="step2">
+              2
+              <div class="step-label">Reports</div>
+            </div>
+            <div class="step" id="step3">
+              3
+              <div class="step-label">Letter</div>
+            </div>
+            <div class="step" id="step4">
+              4
+              <div class="step-label">Packaging</div>
+            </div>
+            <div class="step" id="step5">
+              5
+              <div class="step-label">Complete</div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="result" class="result">
+          <div class="result-content">
+            <svg id="resultIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span id="resultMessage"></span>
+          </div>
+          <a id="downloadLink" href="#" class="download-link" style="display: none;" target="_blank">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Training Package
+          </a>
+        </div>
+        
+        <div class="button-container">
+          <button id="submitButton" class="btn btn-primary" onclick="submitForm()" style="display: flex; align-items: center; gap: 8px; font-weight: bold;">
+            <i class="fas fa-download fa-lg"></i>
+            <strong>Download Training Package</strong>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM elements
+    const hospitalSelect = document.getElementById('hospitalName');
+    const laserModelSelect = document.getElementById('kLaserModel');
+    const traineesTableBody = document.getElementById('traineesTableBody');
+    const searchInput = document.getElementById('searchTrainees');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const submitButton = document.getElementById('submitButton');
+    const resultDiv = document.getElementById('result');
+    const resultIcon = document.getElementById('resultIcon');
+    const resultMessage = document.getElementById('resultMessage');
+    const downloadLink = document.getElementById('downloadLink');
+    const phoneInput = document.getElementById('recipientPhone');
+    const loadingDiv = document.getElementById('loading');
+    
+    // Progress bar elements
+    const progressFill = document.getElementById('progressFill');
+    const progressPercentage = document.getElementById('progressPercentage');
+    const timeRemaining = document.getElementById('timeRemaining');
+    const filesProcessed = document.getElementById('filesProcessed');
+    const currentStage = document.getElementById('currentStage');
+    const steps = [
+      document.getElementById('step1'),
+      document.getElementById('step2'),
+      document.getElementById('step3'),
+      document.getElementById('step4'),
+      document.getElementById('step5')
+    ];
+    
+    // Progress tracking variables
+    let startTime;
+    let totalFiles = 0;
+    let processedFiles = 0;
+    let currentProgress = 0;
+    let progressInterval;
+    
+    // Load data when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadHospitalNames();
+      loadKLaserModels();
+      loadTrainees();
+      
+      // Add event listeners
+      searchInput.addEventListener('input', filterTrainees);
+      selectAllCheckbox.addEventListener('change', toggleSelectAll);
+      phoneInput.addEventListener('input', validatePhoneNumber);
+    });
+    
+    // Load hospital names from Google Apps Script
+    function loadHospitalNames() {
+      google.script.run
+        .withSuccessHandler(function(hospitals) {
+          hospitalSelect.innerHTML = '<option value="">Select Hospital</option>';
+          
+          hospitals.forEach(function(hospital) {
+            const option = document.createElement('option');
+            option.value = hospital;
+            option.textContent = hospital;
+            hospitalSelect.appendChild(option);
+          });
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error loading hospitals:', error);
+          hospitalSelect.innerHTML = '<option value="">Error loading hospitals</option>';
+        })
+        .getHospitalNames();
+    }
+    
+    // Load K-Laser models from Google Apps Script
+    function loadKLaserModels() {
+      google.script.run
+        .withSuccessHandler(function(models) {
+          laserModelSelect.innerHTML = '<option value="">Select K-Laser Model</option>';
+          
+          models.forEach(function(model) {
+            const option = document.createElement('option');
+            option.value = model;
+            option.textContent = model;
+            laserModelSelect.appendChild(option);
+          });
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error loading K-Laser models:', error);
+          laserModelSelect.innerHTML = '<option value="">Error loading models</option>';
+        })
+        .getKLaserModels();
+    }
+    
+    // Load trainees from Google Apps Script
+    function loadTrainees() {
+      google.script.run
+        .withSuccessHandler(function(trainees) {
+          traineesTableBody.innerHTML = '';
+          
+          if (trainees.length === 0) {
+            traineesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No trainees found</td></tr>';
+            return;
+          }
+          
+          trainees.forEach(function(trainee) {
+            const row = document.createElement('tr');
+            
+            const selectCell = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'trainee-checkbox';
+            checkbox.dataset.name = trainee.name;
+            checkbox.dataset.id = trainee.id;
+            selectCell.appendChild(checkbox);
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = trainee.name;
+            
+            const idCell = document.createElement('td');
+            idCell.textContent = trainee.id;
+            
+            row.appendChild(selectCell);
+            row.appendChild(nameCell);
+            row.appendChild(idCell);
+            
+            traineesTableBody.appendChild(row);
+          });
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error loading trainees:', error);
+          traineesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Error loading trainees</td></tr>';
+        })
+        .getTrainees();
+    }
+    
+    // Filter trainees based on search input
+    function filterTrainees() {
+      const searchText = searchInput.value.toLowerCase();
+      const rows = traineesTableBody.getElementsByTagName('tr');
+      
+      for (let i = 0; i < rows.length; i++) {
+        const nameCell = rows[i].getElementsByTagName('td')[1];
+        const idCell = rows[i].getElementsByTagName('td')[2];
+        
+        if (nameCell && idCell) {
+          const nameText = nameCell.textContent || nameCell.innerText;
+          const idText = idCell.textContent || idCell.innerText;
+          
+          if (nameText.toLowerCase().includes(searchText) || 
+              idText.toLowerCase().includes(searchText)) {
+            rows[i].style.display = '';
+          } else {
+            rows[i].style.display = 'none';
+          }
+        }
+      }
+      
+      // Update selectAll checkbox state
+      updateSelectAllState();
+    }
+    
+    // Toggle select all trainees
+    function toggleSelectAll() {
+      const isChecked = selectAllCheckbox.checked;
+      const checkboxes = document.getElementsByClassName('trainee-checkbox');
+      const visibleCheckboxes = Array.from(checkboxes).filter(checkbox => 
+        checkbox.closest('tr').style.display !== 'none'
+      );
+      
+      visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+    }
+    
+    // Update select all checkbox state based on visible checkboxes
+    function updateSelectAllState() {
+      const checkboxes = document.getElementsByClassName('trainee-checkbox');
+      const visibleCheckboxes = Array.from(checkboxes).filter(checkbox => 
+        checkbox.closest('tr').style.display !== 'none'
+      );
+      
+      if (visibleCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+      }
+      
+      const checkedCount = visibleCheckboxes.filter(checkbox => checkbox.checked).length;
+      
+      if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      } else if (checkedCount === visibleCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      }
+    }
+    
+    // Validate phone number input
+    function validatePhoneNumber(event) {
+      const input = event.target;
+      const value = input.value;
+      const validChars = /^[0-9+\-]*$/;
+      
+      if (!validChars.test(value)) {
+        input.value = value.replace(/[^0-9+\-]/g, '');
+      }
+    }
+    
+    // Progress bar functions
+    function startProgress() {
+      // Reset progress tracking
+      startTime = new Date();
+      currentProgress = 0;
+      processedFiles = 0;
+      
+      // Estimate total files based on number of trainees
+      const selectedTrainees = getSelectedTrainees();
+      totalFiles = selectedTrainees.length * 2 + 2; // 2 files per trainee + group report + letter
+      
+      // Update UI
+      updateProgressUI(0, 'Preparing Training Package');
+      setActiveStep(1);
+      
+      // Start progress simulation
+      progressInterval = setInterval(simulateProgress, 300);
+    }
+    
+    function simulateProgress() {
+    // Simulate progress based on time elapsed
+    const elapsedTime = (new Date() - startTime) / 1000; // in seconds
+    const totalDuration = 180; // 3 minutes in seconds
+    
+    // Different stages of the process with extended timings
+    if (elapsedTime < 30) {
+      // Stage 1: Preparation (0-10%) - 30 seconds
+      currentProgress = Math.min(10, elapsedTime * (10/30));
+      updateProgressUI(currentProgress, 'Preparing Training Package');
+      setActiveStep(1);
+    } else if (elapsedTime < 90) {
+      // Stage 2: Generating Individual Reports (10-50%) - 60 seconds
+      const stageProgress = (elapsedTime - 30) / 60; // 0 to 1 for this stage
+      currentProgress = 10 + (stageProgress * 40);
+      processedFiles = Math.floor(stageProgress * totalFiles * 0.6);
+      updateProgressUI(currentProgress, 'Generating Individual Reports');
+      setActiveStep(2);
+    } else if (elapsedTime < 120) {
+      // Stage 3: Generating Group Report (50-70%) - 30 seconds
+      const stageProgress = (elapsedTime - 90) / 30; // 0 to 1 for this stage
+      currentProgress = 50 + (stageProgress * 20);
+      processedFiles = Math.floor(totalFiles * 0.6 + stageProgress * totalFiles * 0.2);
+      updateProgressUI(currentProgress, 'Generating Group Report');
+      setActiveStep(3);
+    } else if (elapsedTime < 150) {
+      // Stage 4: Creating Training Letter (70-85%) - 30 seconds
+      const stageProgress = (elapsedTime - 120) / 30; // 0 to 1 for this stage
+      currentProgress = 70 + (stageProgress * 15);
+      processedFiles = Math.floor(totalFiles * 0.8 + stageProgress * totalFiles * 0.1);
+      updateProgressUI(currentProgress, 'Creating Training Letter');
+      setActiveStep(4);
+    } else if (elapsedTime < 180) {
+      // Stage 5: Packaging Files (85-94%) - 30 seconds
+      const stageProgress = (elapsedTime - 150) / 30; // 0 to 1 for this stage
+      currentProgress = 85 + (stageProgress * 9);
+      processedFiles = Math.floor(totalFiles * 0.9 + stageProgress * totalFiles * 0.1);
+      updateProgressUI(currentProgress, 'Packaging Files');
+      setActiveStep(5);
+    }
+    
+    // Don't go to 94% - that will be set when the actual process completes
+    currentProgress = Math.min(94, currentProgress);
+  }
+    
+    function updateProgressUI(percentage, stage) {
+      // Update progress bar
+      progressFill.style.width = percentage + '%';
+      progressPercentage.textContent = Math.round(percentage) + '%';
+      
+      // Update stage text
+      if (currentStage.textContent !== stage) {
+        currentStage.textContent = stage;
+      }
+      
+      // Update files processed
+      filesProcessed.textContent = `Processing: ${processedFiles}/${totalFiles} files`;
+      
+      // Update time remaining
+      if (percentage > 0) {
+        const elapsedTime = (new Date() - startTime) / 1000; // in seconds
+        const estimatedTotalTime = (elapsedTime / percentage) * 100;
+        const remainingTime = Math.max(0, estimatedTotalTime - elapsedTime);
+        
+        if (remainingTime < 60) {
+          timeRemaining.textContent = `Estimated time: ${Math.round(remainingTime)} seconds`;
+        } else {
+          timeRemaining.textContent = `Estimated time: ${Math.floor(remainingTime / 60)}m ${Math.round(remainingTime % 60)}s`;
+        }
+      }
+    }
+    
+    function setActiveStep(stepNumber) {
+      // Update step indicators
+      steps.forEach((step, index) => {
+        if (index + 1 < stepNumber) {
+          step.classList.remove('active');
+          step.classList.add('completed');
+        } else if (index + 1 === stepNumber) {
+          step.classList.add('active');
+          step.classList.remove('completed');
+        } else {
+          step.classList.remove('active');
+          step.classList.remove('completed');
+        }
+      });
+    }
+    
+    function completeProgress() {
+      // Stop the progress simulation
+      clearInterval(progressInterval);
+      
+      // Set to 100%
+      updateProgressUI(100, 'Package Complete!');
+      
+      // Mark all steps as completed
+      steps.forEach(step => {
+        step.classList.remove('active');
+        step.classList.add('completed');
+      });
+      
+      // Update final status
+      filesProcessed.textContent = `Processed: ${totalFiles}/${totalFiles} files`;
+      timeRemaining.textContent = 'Completed successfully!';
+    }
+    
+    // Get selected trainees
+    function getSelectedTrainees() {
+      const checkboxes = document.getElementsByClassName('trainee-checkbox');
+      const selectedTrainees = [];
+      
+      for (let i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+          selectedTrainees.push({
+            name: checkboxes[i].dataset.name,
+            id: checkboxes[i].dataset.id
+          });
+        }
+      }
+      
+      return selectedTrainees;
+    }
+    
+    // Submit the form to Google Apps Script
+    function submitForm() {
+      // Get form values
+      const affiliatedCompany = document.getElementById('affiliatedCompany').value;
+      const hospitalName = document.getElementById('hospitalName').value;
+      const kLaserModel = document.getElementById('kLaserModel').value;
+      const address = document.getElementById('address').value;
+      const recipientName = document.getElementById('recipientName').value;
+      const recipientPhone = document.getElementById('recipientPhone').value;
+      
+      // Validate form
+      if (!affiliatedCompany || !hospitalName || !kLaserModel || !address || !recipientName || !recipientPhone) {
+        showResult(false, 'Please fill in all required fields.');
+        return;
+      }
+      
+      // Get selected trainees
+      const selectedTrainees = getSelectedTrainees();
+      
+      if (selectedTrainees.length === 0) {
+        showResult(false, 'Please select at least one trainee.');
+        return;
+      }
+      
+      // Show loading indicator and start progress
+      loadingDiv.style.display = 'block';
+      resultDiv.style.display = 'none';
+      submitButton.disabled = true;
+      startProgress();
+      
+      // Prepare form data
+      const formData = {
+        affiliatedCompany: affiliatedCompany,
+        hospitalName: hospitalName,
+        kLaserModel: kLaserModel,
+        address: address,
+        recipientName: recipientName,
+        recipientPhone: recipientPhone,
+        selectedTrainees: selectedTrainees
+      };
+      
+      // Submit to Google Apps Script
+      google.script.run
+        .withSuccessHandler(function(response) {
+          completeProgress();
+          
+          // Short delay to show 100% completion before hiding progress
+          setTimeout(() => {
+            loadingDiv.style.display = 'none';
+            submitButton.disabled = false;
+            
+            if (response.success) {
+              showResult(true, response.message);
+              downloadLink.href = response.url;
+              downloadLink.style.display = 'flex';
+            } else {
+              showResult(false, response.message);
+              downloadLink.style.display = 'none';
+            }
+          }, 1000);
+        })
+        .withFailureHandler(function(error) {
+          clearInterval(progressInterval);
+          loadingDiv.style.display = 'none';
+          submitButton.disabled = false;
+          showResult(false, 'An error occurred: ' + error.message);
+          downloadLink.style.display = 'none';
+        })
+        .processForm(formData);
+    }
+    
+    // Show result message
+    function showResult(success, message) {
+      resultDiv.style.display = 'block';
+      resultDiv.className = success ? 'result result-success' : 'result result-error';
+      
+      if (success) {
+        resultIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+        resultIcon.className = 'icon icon-success';
+      } else {
+        resultIcon.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+        resultIcon.className = 'icon icon-error';
+      }
+      
+      resultMessage.textContent = message;
+    }
+  </script>
+</body>
+</html>

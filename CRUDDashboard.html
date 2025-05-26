@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training System (TS)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    /* Custom Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #E48F24;
+      border-radius: 10px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d17d1a;
+    }
+
+    /* Firefox scrollbar */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #E48F24 rgba(255, 255, 255, 0.1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #573FD5, #1f46a3);
+      color: #333;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      background-color: #1a1f2c;
+      height: 100vh;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: #141824;
+      color: white;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background-color: #E48F24;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo i {
+      font-size: 20px;
+    }
+
+    .sidebar-title {
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity 0.3s ease, width 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-title {
+      opacity: 0;
+      width: 0;
+    }
+
+    .sidebar-menu {
+      padding: 20px 0;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .sidebar-item {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      margin: 4px 8px;
+      border-radius: 8px;
+    }
+
+    .sidebar-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .sidebar-item i {
+      font-size: 18px;
+      min-width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-item span {
+      margin-left: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity 0.3s ease, width 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-item span {
+      opacity: 0;
+      width: 0;
+    }
+
+    .sidebar-toggle {
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .sidebar-toggle:hover {
+      color: #fff;
+    }
+
+    .sidebar-toggle i {
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-toggle {
+      justify-content: center;
+    }
+
+    .sidebar-mobile-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #573FD7;
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 99;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      flex: 1;
+      margin-left: 250px;
+      transition: margin-left 0.3s ease;
+      width: calc(100% - 250px);
+    }
+
+    .main-content.sidebar-collapsed {
+      margin-left: 70px;
+      width: calc(100% - 70px);
+    }
+
+    .main-content.sidebar-hidden {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    header {
+      display: flex;
+      justify-content: center;  /* Changed from space-between to center */
+      align-items: center;
+      padding: 0 2rem;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: #573FD7;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-title {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      white-space: nowrap;
+      position: absolute;  /* Added to keep title centered */
+      left: 50%;          /* Added to keep title centered */
+      transform: translateX(-50%);  /* Added to keep title centered */
+    }
+
+    .notification-container {
+      margin-left: auto;
+      position: relative;  /* Added to ensure it stays on the right */
+      z-index: 1;         /* Added to keep it above the centered title */
+    }
+
+    .notification-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background-color 0.3s;
+      color: #fff;
+    }
+
+    .notification-btn:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .notification-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #E48F24;
+      color: white;
+      font-size: 0.75rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    main {
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      color: #fff;
+      font-size: 1.75rem;
+      margin: 2rem 0 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 0.75rem;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      border-left: 4px solid #E48F24;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-header h3 {
+      font-size: 1rem;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .stat-header i {
+      color: #573FD7;
+      font-size: 1.25rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #11358B;
+    }
+
+    .card {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
+      background-color: rgba(249, 249, 249, 0.8);
+    }
+
+    .card-header h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #11358B;
+    }
+
+    .card-header p {
+      color: #666;
+      font-size: 0.875rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border-radius: 0.5rem;
+      background-color: #fff;
+    }
+
+    /* Custom scrollbar for tables */
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: #E48F24;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      font-weight: 600;
+      color: #11358B;
+      background-color: #f9f9f9;
+      position: sticky;
+      top: 0;
+    }
+
+    tbody tr {
+      transition: background-color 0.3s;
+    }
+
+    tbody tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .status-completed {
+      color: #38a169;
+      font-weight: 600;
+    }
+
+    .status-in-progress {
+      color: #573FD7;
+      font-weight: 600;
+    }
+
+    .status-canceled {
+      color: #e53e3e;
+      font-weight: 600;
+    }
+
+    .status-rescheduled {
+      color: #E48F24;
+      font-weight: 600;
+    }
+
+    .status-error {
+      color: #e53e3e;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .days-critical {
+      color: #e53e3e;
+      font-weight: bold;
+    }
+
+    .days-overdue {
+      color: #fff;
+      background-color: #e53e3e;
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+    .days-today {
+      color: #fff;
+      background-color: #E48F24;
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 1200px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border-left: 5px solid #E48F24;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f9f9f9;
+    }
+
+    .modal-header h2 {
+      color: #11358B;
+      font-size: 1.5rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .close {
+      color: #aaa;
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .close:hover {
+      color: #573FD7;
+    }
+
+    /* Custom trainer card styles */
+    #trainers-container .stat-card {
+      border-left: 4px solid #573FD7;
+    }
+
+    #trainers-container .stat-card h3 {
+      color: #11358B;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.75rem;
+    }
+
+    #trainers-container .stat-card span {
+      font-size: 0.95rem;
+    }
+
+    /* Loading indicator */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(17, 53, 139, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .loading-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Scroll to top button */
+    .scroll-top {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background-color: #E48F24;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 99;
+    }
+
+    .scroll-top.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Chip styles for comma-separated values */
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .chip {
+      background-color: #e9ecef;
+      border-radius: 16px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      color: #495057;
+      font-weight: 500;
+    }
+
+    .chip i {
+      margin-right: 5px;
+      font-size: 0.8rem;
+      color: #573FD7;
+    }
+
+    /* New styles for hospital cards in notification modal */
+    .hospital-card {
+      background-color: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      border-left: 4px solid #E48F24;
+    }
+
+    .hospital-header {
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .hospital-header:hover {
+      background-color: #f0f0f0;
+    }
+
+    .hospital-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #11358B;
+    }
+
+    .hospital-badge {
+      background-color: #573FD7;
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      margin-left: 0.5rem;
+    }
+
+    .hospital-action {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #573FD7;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+    }
+
+    .hospital-action:hover {
+      background-color: rgba(87, 63, 215, 0.1);
+    }
+
+    .hospital-content {
+      display: none;
+      padding: 0 1rem 1rem;
+      border-top: 1px solid #eee;
+    }
+
+    .hospital-content.active {
+      display: block;
+    }
+
+    /* Toast notification */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 350px;
+    }
+
+    .toast {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideIn 0.3s ease forwards;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .toast.success {
+      border-left: 4px solid #38a169;
+    }
+
+    .toast.error {
+      border-left: 4px solid #e53e3e;
+    }
+
+    .toast.info {
+      border-left: 4px solid #3182ce;
+    }
+
+    .toast.warning {
+      border-left: 4px solid #E48F24;
+    }
+
+    .toast-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .toast.success .toast-icon {
+      color: #38a169;
+    }
+
+    .toast.error .toast-icon {
+      color: #e53e3e;
+    }
+
+    .toast.info .toast-icon {
+      color: #3182ce;
+    }
+
+    .toast.warning .toast-icon {
+      color: #E48F24;
+    }
+
+    .toast-content {
+      flex-grow: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .toast-message {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .toast-close {
+      color: #999;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+      color: #333;
+    }
+
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background-color: rgba(0, 0, 0, 0.1);
+      width: 100%;
+    }
+
+    .toast-progress-bar {
+      height: 100%;
+      width: 100%;
+      transform-origin: left;
+      animation: progress 5s linear forwards;
+    }
+
+    .toast.success .toast-progress-bar {
+      background-color: #38a169;
+    }
+
+    .toast.error .toast-progress-bar {
+      background-color: #e53e3e;
+    }
+
+    .toast.info .toast-progress-bar {
+      background-color: #3182ce;
+    }
+
+    .toast.warning .toast-progress-bar {
+      background-color: #E48F24;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes progress {
+      from {
+        transform: scaleX(1);
+      }
+      to {
+        transform: scaleX(0);
+      }
+    }
+
+    /* Error state styles */
+    .error-state {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      text-align: center;
+      margin: 1rem 0;
+      border-left: 4px solid #e53e3e;
+    }
+
+    .error-state i {
+      font-size: 3rem;
+      color: #e53e3e;
+      margin-bottom: 1rem;
+    }
+
+    .error-state h3 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-state p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .retry-button {
+      background-color: #573FD7;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .retry-button:hover {
+      background-color: #4930b8;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+      
+      .sidebar-mobile-toggle {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 1rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        margin: 1.5rem 0 1rem;
+      }
+
+      .stat-card {
+        padding: 1.25rem;
+      }
+
+      .stat-value {
+        font-size: 1.75rem;
+      }
+
+      .card-header, .card-content {
+        padding: 1.25rem;
+      }
+
+      th, td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .modal-content {
+        width: 95%;
+        margin: 5% auto;
+      }
+      
+      .header-title {
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      th, td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+      
+      .header-title {
+        font-size: 1.1rem;
+      }
+      
+      header {
+        padding: 0 1rem;
+      }
+
+      .toast-container {
+        max-width: 90%;
+        right: 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast container for notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <i class="fas fa-book-open-reader text-white"></i>
+      </div>
+      <div class="sidebar-title">Training System <br> (TS)</div>
+    </div>
+    <div class="sidebar-menu">
+      <a class="sidebar-item">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="YOUR_TRAINEE_DATABASE_DEPLOYMENT_LINK" class="sidebar-item">
+        <i class="fas fa-users"></i>
+        <span>Trainee Database</span>
+      </a>
+      <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <span>Training Management</span>
+      </a>
+      <a href="YOUR_QUESTIONS_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+        <i class="fas fa-question-circle"></i>
+        <span>Questions Management</span>
+      </a>
+      <a href="YOUR_SETTINGS_DEPLOYMENT_LINK" class="sidebar-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+    </div>
+    <div id="sidebar-toggle" class="sidebar-toggle">
+      <i class="fas fa-chevron-left"></i>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar toggle button -->
+  <div id="sidebar-mobile-toggle" class="sidebar-mobile-toggle">
+    <i class="fas fa-bars"></i>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main-content" class="main-content">
+    <header>
+      <div class="header-title">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </div>
+      <div class="notification-container">
+        <button id="notification-btn" class="notification-btn">
+          <i class="fas fa-bell"></i>
+          <span id="notification-count" class="notification-count">0</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="notification-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Upcoming Re-certifications</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="hospital-cards-container">
+            <!-- Hospital cards will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <!-- Trainings Section -->
+      <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Trainings</h2>
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Total Trainings</h3>
+            <i class="fas fa-calendar"></i>
+          </div>
+          <div class="stat-value" id="total-trainings">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>In Progress</h3>
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-value" id="trainings-in-progress">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Completed</h3>
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-value" id="trainings-completed">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Canceled</h3>
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="stat-value" id="trainings-canceled">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Rescheduled</h3>
+            <i class="fas fa-sync"></i>
+          </div>
+          <div class="stat-value" id="trainings-rescheduled">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Recent Trainings</h2>
+          <p>Showing the most recent trainings</p>
+        </div>
+        <div class="card-content">
+          <div id="recent-trainings-error" class="error-state" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <h3>Failed to load recent trainings</h3>
+            <p>There was an error loading the recent trainings data.</p>
+            <button id="retry-trainings" class="retry-button">Retry</button>
+          </div>
+          <div class="table-container">
+            <table id="recent-trainings-table">
+              <thead>
+                <tr>
+                  <th>Training Name</th>
+                  <th>Trainer</th>
+                  <th>Healthcare Centre</th>
+                  <th>Start Date & Time</th>
+                  <th>End Date & Time</th>
+                  <th>Device Serial Number</th>
+                  <th>Training Type</th>
+                  <th>Training Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-trainings-body">
+                <!-- Recent trainings data will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trainees Section -->
+      <h2 class="section-title"><i class="fas fa-users"></i> Trainees</h2>
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Total Trainees</h3>
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-value" id="total-trainees">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Active Trainees</h3>
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-value" id="active-trainees">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3>Inactive Trainees</h3>
+            <i class="fas fa-user-times"></i>
+          </div>
+          <div class="stat-value" id="inactive-trainees">0</div>
+        </div>
+      </div>
+
+      <!-- Trainers Section -->
+      <h2 class="section-title"><i class="fas fa-chalkboard-teacher"></i> Trainers</h2>
+      <div id="trainers-error" class="error-state" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Failed to load trainer data</h3>
+        <p>There was an error loading the trainer statistics.</p>
+        <button id="retry-trainers" class="retry-button">Retry</button>
+      </div>
+      <div id="trainers-container" class="stats-container">
+        <!-- Trainer cards will be inserted here -->
+      </div>
+    </main>
+
+    <button id="scroll-top" class="scroll-top">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+  </div>
+
+  <script>
+     
+    document.addEventListener('DOMContentLoaded', function() {
+       
+      setupSidebar();
+      
+       
+      loadDashboardData();
+      
+       
+      setupNotificationModal();
+      
+       
+      setupScrollToTop();
+      
+       
+      setupRetryButtons();
+    });
+
+     
+    function setupSidebar() {
+      try {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
+        const toggleIcon = sidebarToggle.querySelector('i');
+        
+         
+        sidebarToggle.addEventListener('click', function() {
+          if (sidebar.classList.contains('collapsed')) {
+             
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('sidebar-collapsed');
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-chevron-left');
+          } else {
+             
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+            toggleIcon.classList.remove('fa-chevron-left');
+            toggleIcon.classList.add('fa-chevron-right');
+          }
+        });
+        
+         
+        sidebarMobileToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('active');
+        });
+        
+         
+        document.addEventListener('click', function(event) {
+          const isMobile = window.innerWidth <= 992;
+          if (isMobile && 
+              !sidebar.contains(event.target) && 
+              !sidebarMobileToggle.contains(event.target) &&
+              sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+          }
+        });
+        
+         
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 992) {
+            sidebar.classList.remove('active');
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up sidebar:', error);
+        showToast('error', 'Sidebar Error', 'Failed to set up sidebar navigation. Some functionality may be limited.');
+      }
+    }
+
+     
+    function loadDashboardData() {
+       
+      showLoading();
+      
+       
+      google.script.run
+        .withSuccessHandler(function(data) {
+          try {
+             
+            updateNotifications(data.notifications);
+            updateTrainingsSection(data.trainings, data.trainingStats);
+            updateTraineesSection(data.traineeStats);
+            updateTrainersSection(data.trainerStats);
+            
+             
+            showToast('success', 'Dashboard Loaded', 'All dashboard data has been successfully loaded.');
+          } catch (error) {
+            console.error('Error processing dashboard data:', error);
+            showToast('error', 'Data Processing Error', 'There was an error processing the dashboard data: ' + error.message);
+          } finally {
+             
+            hideLoading();
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error loading dashboard data:', error);
+          showToast('error', 'Loading Error', 'Failed to load dashboard data: ' + error.message);
+          
+           
+          document.getElementById('recent-trainings-error').style.display = 'block';
+          document.getElementById('trainers-error').style.display = 'block';
+          
+           
+          hideLoading();
+        })
+        .getDashboardData();
+    }
+
+     
+    function loadDashboardSection(section) {
+      showLoading();
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          try {
+            switch(section) {
+              case 'trainings':
+                updateTrainingsSection(data.trainings, data.trainingStats);
+                document.getElementById('recent-trainings-error').style.display = 'none';
+                showToast('success', 'Trainings Updated', 'Training data has been refreshed.');
+                break;
+              case 'trainees':
+                updateTraineesSection(data.traineeStats);
+                showToast('success', 'Trainees Updated', 'Trainee statistics have been refreshed.');
+                break;
+              case 'trainers':
+                updateTrainersSection(data.trainerStats);
+                document.getElementById('trainers-error').style.display = 'none';
+                showToast('success', 'Trainers Updated', 'Trainer data has been refreshed.');
+                break;
+              case 'notifications':
+                updateNotifications(data.notifications);
+                showToast('success', 'Notifications Updated', 'Notification data has been refreshed.');
+                break;
+            }
+          } catch (error) {
+            console.error(`Error processing ${section} data:`, error);
+            showToast('error', 'Data Processing Error', `There was an error processing the ${section} data: ` + error.message);
+          } finally {
+            hideLoading();
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error(`Error loading ${section} data:`, error);
+          showToast('error', 'Loading Error', `Failed to load ${section} data: ` + error.message);
+          
+          if (section === 'trainings') {
+            document.getElementById('recent-trainings-error').style.display = 'block';
+          } else if (section === 'trainers') {
+            document.getElementById('trainers-error').style.display = 'block';
+          }
+          
+          hideLoading();
+        })
+        .getDashboardData();
+    }
+
+     
+    function setupRetryButtons() {
+      document.getElementById('retry-trainings').addEventListener('click', function() {
+        loadDashboardSection('trainings');
+      });
+      
+      document.getElementById('retry-trainers').addEventListener('click', function() {
+        loadDashboardSection('trainers');
+      });
+    }
+
+     
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('active');
+    }
+
+     
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('active');
+    }
+
+     
+    function setupNotificationModal() {
+      try {
+        const modal = document.getElementById('notification-modal');
+        const btn = document.getElementById('notification-btn');
+        const closeBtn = document.querySelector('.close');
+        
+        btn.addEventListener('click', function() {
+          modal.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+          modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up notification modal:', error);
+        showToast('error', 'Notification Error', 'Failed to set up notification system. Some functionality may be limited.');
+      }
+    }
+
+     
+    function setupScrollToTop() {
+      try {
+        const scrollBtn = document.getElementById('scroll-top');
+        
+        window.addEventListener('scroll', function() {
+          if (window.pageYOffset > 300) {
+            scrollBtn.classList.add('visible');
+          } else {
+            scrollBtn.classList.remove('visible');
+          }
+        });
+        
+        scrollBtn.addEventListener('click', function() {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      } catch (error) {
+        console.error('Error setting up scroll to top button:', error);
+         
+      }
+    }
+
+     
+    function showToast(type, title, message, duration = 5000) {
+      try {
+        const toastContainer = document.getElementById('toast-container');
+        
+         
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+         
+        let iconClass = '';
+        switch(type) {
+          case 'success':
+            iconClass = 'fas fa-check-circle';
+            break;
+          case 'error':
+            iconClass = 'fas fa-exclamation-circle';
+            break;
+          case 'info':
+            iconClass = 'fas fa-info-circle';
+            break;
+          case 'warning':
+            iconClass = 'fas fa-exclamation-triangle';
+            break;
+        }
+        
+         
+        toast.innerHTML = `
+          <div class="toast-icon">
+            <i class="${iconClass}"></i>
+          </div>
+          <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <div class="toast-close">
+            <i class="fas fa-times"></i>
+          </div>
+          <div class="toast-progress">
+            <div class="toast-progress-bar"></div>
+          </div>
+        `;
+        
+         
+        toastContainer.appendChild(toast);
+        
+         
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', function() {
+          removeToast(toast);
+        });
+        
+         
+        setTimeout(function() {
+          removeToast(toast);
+        }, duration);
+      } catch (error) {
+        console.error('Error showing toast notification:', error);
+         
+        if (type === 'error') {
+          alert(`${title}: ${message}`);
+        }
+      }
+    }
+
+     
+    function removeToast(toast) {
+      toast.style.animation = 'slideOut 0.3s ease forwards';
+      setTimeout(function() {
+        toast.remove();
+      }, 300);
+    }
+
+     
+    function updateNotifications(notifications) {
+      try {
+         
+        const notificationCount = document.getElementById('notification-count');
+        notificationCount.textContent = notifications.length;
+        
+         
+        const groupedByHospital = {};
+        
+        notifications.forEach(notification => {
+          const hospital = notification.healthcareCentre || 'Unknown';
+          if (!groupedByHospital[hospital]) {
+            groupedByHospital[hospital] = [];
+          }
+          groupedByHospital[hospital].push(notification);
+        });
+        
+         
+        const hospitalCardsContainer = document.getElementById('hospital-cards-container');
+        hospitalCardsContainer.innerHTML = '';
+        
+        if (Object.keys(groupedByHospital).length === 0) {
+          hospitalCardsContainer.innerHTML = `
+            <div class="error-state" style="border-left-color: #3182ce;">
+              <i class="fas fa-info-circle" style="color: #3182ce;"></i>
+              <h3>No Upcoming Re-certifications</h3>
+              <p>There are no trainees due for re-certification in the next 60 days.</p>
+            </div>
+          `;
+          return;
+        }
+        
+         
+        Object.entries(groupedByHospital).forEach(([hospital, trainees]) => {
+          const hospitalCard = document.createElement('div');
+          hospitalCard.className = 'hospital-card';
+          
+           
+          const hospitalHeader = document.createElement('div');
+          hospitalHeader.className = 'hospital-header';
+          hospitalHeader.innerHTML = `
+            <div class="hospital-name">
+              <i class="fas fa-hospital"></i>
+              ${hospital}
+              <span class="hospital-badge">${trainees.length} ${trainees.length === 1 ? 'trainee' : 'trainees'}</span>
+            </div>
+            <button class="hospital-action">
+              <span>View Details</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          `;
+          
+           
+          const hospitalContent = document.createElement('div');
+          hospitalContent.className = 'hospital-content';
+          
+           
+          const tableContainer = document.createElement('div');
+          tableContainer.className = 'table-container';
+          
+          const table = document.createElement('table');
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Trainee Name</th>
+                <th>IC/Passport</th>
+                <th>Trainee ID</th>
+                <th>Email</th>
+                <th>Handphone Number</th>
+                <th>Designation</th>
+                <th>Days Left</th>
+                <th>Re-certification Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${trainees.map(trainee => `
+                <tr>
+                  <td>${trainee.name}</td>
+                  <td>${trainee.icPassport}</td>
+                  <td>${trainee.traineeId}</td>
+                  <td>${trainee.email}</td>
+                  <td>${trainee.phone}</td>
+                  <td>${trainee.designation}</td>
+                  <td class="${getDaysLeftClass(trainee.daysLeft)}">${getDaysLeftText(trainee.daysLeft)}</td>
+                  <td>${trainee.recertDate}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          `;
+          
+          tableContainer.appendChild(table);
+          hospitalContent.appendChild(tableContainer);
+          
+           
+          hospitalHeader.addEventListener('click', function() {
+            hospitalContent.classList.toggle('active');
+            const icon = hospitalHeader.querySelector('.hospital-action i');
+            const text = hospitalHeader.querySelector('.hospital-action span');
+            
+            if (hospitalContent.classList.contains('active')) {
+              icon.classList.remove('fa-chevron-down');
+              icon.classList.add('fa-chevron-up');
+              text.textContent = 'Hide Details';
+            } else {
+              icon.classList.remove('fa-chevron-up');
+              icon.classList.add('fa-chevron-down');
+              text.textContent = 'View Details';
+            }
+          });
+          
+           
+          hospitalCard.appendChild(hospitalHeader);
+          hospitalCard.appendChild(hospitalContent);
+          
+           
+          hospitalCardsContainer.appendChild(hospitalCard);
+        });
+      } catch (error) {
+        console.error('Error updating notifications:', error);
+        showToast('error', 'Notification Error', 'Failed to update notifications: ' + error.message);
+        
+         
+        const hospitalCardsContainer = document.getElementById('hospital-cards-container');
+        hospitalCardsContainer.innerHTML = `
+          <div class="error-state">
+            <i class="fas fa-exclamation-circle"></i>
+            <h3>Failed to Load Notifications</h3>
+            <p>There was an error loading the notification data.</p>
+            <button class="retry-button" onclick="loadDashboardSection('notifications')">Retry</button>
+          </div>
+        `;
+      }
+    }
+    
+     
+    function getDaysLeftClass(daysLeft) {
+      if (daysLeft < 0) return 'days-overdue';
+      if (daysLeft === 0) return 'days-today';
+      if (daysLeft <= 30) return 'days-critical';
+      return '';
+    }
+    
+     
+    function getDaysLeftText(daysLeft) {
+      if (daysLeft < 0) return `${Math.abs(daysLeft)} (Overdue)`;
+      if (daysLeft === 0) return '0 (Today)';
+      return daysLeft.toString();
+    }
+
+     
+    function createChipsFromText(text, iconClass) {
+      try {
+        const container = document.createElement('div');
+        container.className = 'chip-container';
+        
+        if (!text) return container;
+        
+        const items = text.split(',').map(item => item.trim()).filter(item => item);
+        
+        items.forEach(item => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          
+          const icon = document.createElement('i');
+          icon.className = iconClass;
+          chip.appendChild(icon);
+          
+          const textNode = document.createTextNode(item);
+          chip.appendChild(textNode);
+          
+          container.appendChild(chip);
+        });
+        
+        return container;
+      } catch (error) {
+        console.error('Error creating chips:', error);
+         
+        const container = document.createElement('div');
+        container.textContent = text || '';
+        return container;
+      }
+    }
+
+     
+    function updateTrainingsSection(trainings, stats) {
+      try {
+         
+        document.getElementById('total-trainings').textContent = stats.total;
+        document.getElementById('trainings-in-progress').textContent = stats.inProgress;
+        document.getElementById('trainings-completed').textContent = stats.completed;
+        document.getElementById('trainings-canceled').textContent = stats.canceled;
+        document.getElementById('trainings-rescheduled').textContent = stats.rescheduled;
+        
+         
+        document.getElementById('recent-trainings-error').style.display = 'none';
+        
+         
+        const tableBody = document.getElementById('recent-trainings-body');
+        tableBody.innerHTML = '';
+        
+        if (!trainings || trainings.length === 0) {
+          const emptyRow = document.createElement('tr');
+          const emptyCell = document.createElement('td');
+          emptyCell.colSpan = 8;
+          emptyCell.textContent = 'No training data available';
+          emptyCell.style.textAlign = 'center';
+          emptyCell.style.padding = '2rem';
+          emptyRow.appendChild(emptyCell);
+          tableBody.appendChild(emptyRow);
+          return;
+        }
+        
+        trainings.forEach(training => {
+          const row = document.createElement('tr');
+          
+           
+          const properties = [
+            { key: 'name', className: '', isChip: false, iconClass: '' },
+            { key: 'trainer', className: '', isChip: false, iconClass: '' },
+            { key: 'centre', className: '', isChip: true, iconClass: 'fas fa-hospital' },
+            { key: 'startDate', className: '', isChip: false, iconClass: '' },
+            { key: 'endDate', className: '', isChip: false, iconClass: '' },
+            { key: 'deviceSerial', className: '', isChip: true, iconClass: 'fas fa-microchip' },
+            { key: 'type', className: '', isChip: false, iconClass: '' },
+            { key: 'status', className: getStatusClass(training.status), isChip: false, iconClass: '' }
+          ];
+          
+          properties.forEach(prop => {
+            const cell = document.createElement('td');
+            if (prop.className) {
+              cell.classList.add(prop.className);
+            }
+            
+            if (prop.isChip && training[prop.key]) {
+               
+              const chipContainer = createChipsFromText(training[prop.key], prop.iconClass);
+              cell.appendChild(chipContainer);
+            } else {
+              cell.textContent = training[prop.key] || 'N/A';
+            }
+            
+            row.appendChild(cell);
+          });
+          
+          tableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error updating trainings section:', error);
+        showToast('error', 'Training Data Error', 'Failed to update training data: ' + error.message);
+        
+         
+        document.getElementById('recent-trainings-error').style.display = 'block';
+      }
+    }
+
+     
+    function getStatusClass(status) {
+      if (!status) return '';
+      
+      switch (status.toLowerCase()) {
+        case 'completed':
+          return 'status-completed';
+        case 'in progress':
+          return 'status-in-progress';
+        case 'canceled':
+          return 'status-canceled';
+        case 'rescheduled':
+          return 'status-rescheduled';
+        case 'error':
+          return 'status-error';
+        default:
+          return '';
+      }
+    }
+
+     
+    function updateTraineesSection(stats) {
+      try {
+        document.getElementById('total-trainees').textContent = stats.total;
+        document.getElementById('active-trainees').textContent = stats.active;
+        document.getElementById('inactive-trainees').textContent = stats.inactive;
+      } catch (error) {
+        console.error('Error updating trainees section:', error);
+        showToast('error', 'Trainee Data Error', 'Failed to update trainee statistics: ' + error.message);
+      }
+    }
+
+     
+    function updateTrainersSection(trainers) {
+      try {
+        const container = document.getElementById('trainers-container');
+        container.innerHTML = '';
+        
+         
+        document.getElementById('trainers-error').style.display = 'none';
+        
+        if (!trainers || trainers.length === 0) {
+          document.getElementById('trainers-error').style.display = 'block';
+          return;
+        }
+        
+        trainers.forEach(trainer => {
+          const card = document.createElement('div');
+          card.className = 'stat-card';
+          
+          card.innerHTML = `
+            <h3>${trainer.username || 'Unknown Trainer'}</h3>
+            <div style="margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span style="color: #666;">Trainings Completed:</span>
+                <span style="font-weight: 600; color: #11358B;">${trainer.completed}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #666;">Trainings In Progress:</span>
+                <span style="font-weight: 600; color: #573FD7;">${trainer.inProgress}</span>
+              </div>
+            </div>
+          `;
+          
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error updating trainers section:', error);
+        showToast('error', 'Trainer Data Error', 'Failed to update trainer data: ' + error.message);
+        
+         
+        document.getElementById('trainers-error').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

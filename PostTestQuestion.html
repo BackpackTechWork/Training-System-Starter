@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              custom: {
+                white: '#EAEAEA',
+                purple: '#573FD7',
+                blue: '#11358B',
+                orange: '#E48F24',
+              },
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' }
+              },
+              pulse: {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.05)' }
+              }
+            },
+            animation: {
+              fadeIn: 'fadeIn 0.5s ease-out',
+              pulse: 'pulse 2s infinite'
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      .input-transition {
+        transition: all 0.3s ease;
+      }
+      .input-transition:focus {
+        transform: translateY(-2px);
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .animate-slide-in {
+        animation: slideIn 0.3s ease-out forwards;
+      }
+
+      body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #573FD7, #11358B);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+    </style>
+  </head>
+ <body>
+    <form id="questionForm" class="animate-fadeIn bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto border-t-4 border-custom-purple">
+      <h2 class="text-2xl font-bold mb-8 text-custom-blue text-center flex items-center justify-center gap-3">
+        <i class="fas fa-laser-pointer text-custom-purple animate-pulse"></i>
+        <span class="animate-slide-in">Enter a new main training question</span>
+      </h2>
+      
+      <div class="space-y-6">
+        <div class="group">
+          <label for="question" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+            <i class="fas fa-question-circle mr-2 text-custom-purple"></i>Question:
+          </label>
+          <input type="text" id="question" name="question" required
+                 class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="group animate-slide-in" style="animation-delay: 0.1s;">
+            <label for="option1" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+              <i class="fas fa-check-circle mr-2 text-custom-purple"></i>Option 1:
+            </label>
+            <input type="text" id="option1" name="option1" required
+                   class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+          </div>
+          <div class="group animate-slide-in" style="animation-delay: 0.2s;">
+            <label for="option2" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+              <i class="fas fa-check-circle mr-2 text-custom-purple"></i>Option 2:
+            </label>
+            <input type="text" id="option2" name="option2" required
+                   class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+          </div>
+          <div class="group animate-slide-in" style="animation-delay: 0.3s;">
+            <label for="option3" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+              <i class="fas fa-check-circle mr-2 text-custom-purple"></i>Option 3:
+            </label>
+            <input type="text" id="option3" name="option3" required
+                   class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+          </div>
+          <div class="group animate-slide-in" style="animation-delay: 0.4s;">
+            <label for="option4" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+              <i class="fas fa-check-circle mr-2 text-custom-purple"></i>Option 4:
+            </label>
+            <input type="text" id="option4" name="option4" required
+                   class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+          </div>
+        </div>
+        
+        <div class="group animate-slide-in" style="animation-delay: 0.5s;">
+          <label for="correctAnswer" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+            <i class="fas fa-star mr-2 text-custom-orange"></i>Correct Answer:
+          </label>
+          <select id="correctAnswer" name="correctAnswer" required
+                  class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+            <option value="" disabled selected>Choose a correct answer</option>
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+            <option value="option3">Option 3</option>
+            <option value="option4">Option 4</option>
+          </select>
+        </div>
+       
+        <div class="group animate-slide-in" style="animation-delay: 0.6s;">
+          <label for="objective" class="block text-sm font-medium text-custom-blue mb-2 group-hover:text-custom-purple transition-colors">
+            <i class="fas fa-bullseye mr-2 text-custom-orange"></i>Objective:
+          </label>
+          <select id="objective" name="objective" required
+                  class="input-transition w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-custom-purple focus:ring-2 focus:ring-custom-purple/20 focus:outline-none">
+            <option value="" disabled selected>Choose an objective</option>
+            <!-- Options will be populated dynamically -->
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex justify-center gap-4 mt-8">
+          <button type="button" id="submitBtn" onclick="submitForm(false)" disabled
+                  class="group flex items-center justify-center gap-2 bg-custom-purple hover:bg-custom-blue text-white font-bold py-3 px-12 w-72 rounded-lg focus:outline-none focus:ring-2 focus:ring-custom-purple/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-paper-plane group-hover:rotate-12 transition-transform"></i>
+            <span>Submit</span>
+          </button>
+      </div>
+    </form>
+
+    <script>
+      google.script.run.withSuccessHandler(function(objectives) {
+        var select = document.getElementById('objective');
+        objectives.forEach(function(objective) {
+          var option = document.createElement('option');
+          option.text = objective;
+          option.value = objective;
+          select.add(option);
+        });
+      }).getObjectives();
+
+      function validateForm() {
+        var form = document.getElementById('questionForm');
+        var inputs = form.querySelectorAll('input[required], select[required]');
+        var isValid = true;
+        inputs.forEach(function(input) {
+          if (!input.value.trim()) {
+            isValid = false;
+          }
+        });
+        return isValid;
+      }
+
+      function updateSubmitButtons() {
+        var submitBtn = document.getElementById('submitBtn');
+        var isValid = validateForm();
+        submitBtn.disabled = !isValid;
+      }
+
+      document.getElementById('questionForm').addEventListener('input', updateSubmitButtons);
+
+      function submitForm(submitBtn) {
+        var form = document.getElementById('questionForm');
+        var submitBtn = document.getElementById('submitBtn');
+        
+        // Disable buttons
+        submitBtn.disabled = true;
+
+        var formData = {
+          question: form.question.value,
+          option1: form.option1.value,
+          option2: form.option2.value,
+          option3: form.option3.value,
+          option4: form.option4.value,
+          correctAnswer: form.correctAnswer.value,
+          objective: form.objective.value
+        };
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            alert(result);
+            // Clear the form after submission
+            clearForm(form);
+            // Re-enable buttons after form reset
+            updateSubmitButtons();
+          })
+          .withFailureHandler(function(error) {
+            alert('Error: ' + error);
+            // Re-enable buttons on error
+            updateSubmitButtons();
+          })
+          .submitPostQuestion(formData);
+      }
+
+      function clearForm(form) {
+        // Clear all form fields
+        form.reset();
+        }
+
+      // Initial button state update
+      updateSubmitButtons();
+    </script>
+  </body>
+</html>

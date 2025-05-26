@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Viewer</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom right, #573FD5, #1f46a3);
+        color: #333;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #EAEAEA;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        transition: margin-left 0.3s ease, max-width 0.3s ease;
+      }
+      h1 {
+        color: #11358B;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 28px;
+      }
+      .button-container {
+        text-align: right;
+        margin-bottom: 20px;
+      }
+      .add-button {
+        background-color: #573FD7;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+      }
+      .add-button:hover {
+        background-color: #4931b3;
+      }
+      .add-button.active {
+        display: inline-flex;
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+      }
+      .tab {
+        padding: 12px 24px;
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.7);
+        border: 1px solid #ddd;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        margin-right: 5px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tab.active {
+        background-color: #573FD7;
+        color: white;
+        border-bottom: 1px solid #573FD7;
+        margin-bottom: -1px;
+        font-weight: bold;
+      }
+      .tab:hover:not(.active) {
+        background-color: rgba(231, 231, 231, 0.9);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .question-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+      }
+      .question-card:hover {
+        transform: translateY(-3px);
+      }
+      .question-text {
+        font-weight: bold;
+        margin-bottom: 15px;
+        font-size: 17px;
+        color: #11358B;
+        display: flex;
+        align-items: flex-start;
+      }
+      .question-text i {
+        color: #573FD7;
+        margin-right: 10px;
+        font-size: 20px;
+        margin-top: 2px;
+      }
+      .options {
+        margin-bottom: 15px;
+        padding-left: 10px;
+      }
+      .option {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        padding: 5px 0;
+      }
+      .option i {
+        margin-right: 10px;
+        color: #573FD7;
+        width: 20px;
+        text-align: center;
+      }
+      .correct-answer {
+        color: #4CAF50;
+        font-weight: bold;
+      }
+      .correct-answer i {
+        color: #4CAF50;
+      }
+      .objective {
+        font-style: italic;
+        color: #666;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+      }
+      .objective i {
+        color: #E48F24;
+        margin-right: 10px;
+        font-size: 18px;
+      }
+      .loading {
+        text-align: center;
+        padding: 30px;
+        font-style: italic;
+        color: #666;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .search-container {
+        margin-bottom: 20px;
+        position: relative;
+      }
+      .search-input {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 16px;
+        background-color: white;
+        transition: all 0.3s ease;
+      }
+      .search-input:focus {
+        outline: none;
+        border-color: #573FD7;
+        box-shadow: 0 0 0 2px rgba(87, 63, 215, 0.2);
+      }
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #573FD7;
+      }
+      .no-results {
+        text-align: center;
+        padding: 30px;
+        color: #666;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        font-size: 16px;
+      }
+      .error {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+
+      /* Sidebar Styles */
+      .sidebar {
+        background-color: #1a1f2c;
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar.collapsed {
+        width: 70px;
+      }
+
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: #141824;
+        color: white;
+      }
+
+      .sidebar-logo {
+        width: 40px;
+        height: 40px;
+        background-color: #E48F24;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .sidebar-logo i {
+        font-size: 20px;
+      }
+
+      .sidebar-title {
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: opacity 0.3s ease, width 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-title {
+        opacity: 0;
+        width: 0;
+      }
+
+      .sidebar-menu {
+        padding: 20px 0;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
+
+      .sidebar-item {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin: 4px 8px;
+        border-radius: 8px;
+      }
+
+      .sidebar-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .sidebar-item i {
+        font-size: 18px;
+        min-width: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sidebar-item span {
+        margin-left: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: opacity 0.3s ease, width 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-item span {
+        opacity: 0;
+        width: 0;
+      }
+
+      .sidebar-toggle {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .sidebar-toggle:hover {
+        color: #fff;
+      }
+
+      .sidebar-toggle i {
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-toggle {
+        justify-content: center;
+      }
+
+      .sidebar-mobile-toggle {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #573FD7;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 99;
+      }
+
+      /* Main content wrapper */
+      .main-wrapper {
+        transition: margin-left 0.3s ease;
+        padding: 20px;
+        margin-left: 250px; /* Same as sidebar width */
+      }
+
+      .main-wrapper.sidebar-collapsed {
+        margin-left: 70px; /* Same as collapsed sidebar width */
+      }
+
+      /* Responsive adjustments for sidebar */
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+        
+        .sidebar.active {
+          transform: translateX(0);
+        }
+        
+        .sidebar-mobile-toggle {
+          display: flex;
+        }
+
+        .main-wrapper {
+          margin-left: 0;
+        }
+      }
+
+      /* Custom Scrollbar Styles */
+      ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #E48F24;
+        border-radius: 10px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #d17d1a;
+      }
+
+      /* Firefox scrollbar */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #E48F24 rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class="fas fa-book-open-reader text-white"></i>
+        </div>
+        <div class="sidebar-title">Laser Training System <br> (LTS)</div>
+      </div>
+      <div class="sidebar-menu">
+        <a href="YOUR_DASHBOARD_DEPLOYMENT_LINK" class="sidebar-item">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="YOUR_TRAINEE_DATABASE_DEPLOYMENT_LINK" class="sidebar-item">
+          <i class="fas fa-users"></i>
+          <span>Trainee Database</span>
+        </a>
+        <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <span>Training Management</span>
+        </a>
+        <a class="sidebar-item">
+          <i class="fas fa-question-circle"></i>
+          <span>Questions Management</span>
+        </a>
+        <a href="YOUR_SETTINGS_DEPLOYMENT_LINK" class="sidebar-item">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </div>
+      <div id="sidebar-toggle" class="sidebar-toggle">
+        <i class="fas fa-chevron-left"></i>
+      </div>
+    </div>
+
+    <!-- Mobile sidebar toggle button -->
+    <div id="sidebar-mobile-toggle" class="sidebar-mobile-toggle">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Main content wrapper -->
+    <div id="main-wrapper" class="main-wrapper">
+      <div class="container">
+        <h1><i class="fas fa-book"></i> Question Management</h1>
+        
+        <div class="button-container">
+          <a href="YOUR_MAIN_TRAINING_QUESTION_LINK" 
+             target="_blank" 
+             class="add-button active" 
+             id="post-test-button">
+            <i class="fas fa-plus"></i> Add Main Training Question
+          </a>
+          <a href="YOUR_REFRESHMENT_TRAINING_QUESTION_LINK" 
+             target="_blank" 
+             class="add-button" 
+             id="refreshment-button">
+            <i class="fas fa-plus"></i> Add Refreshment Training Question
+          </a>
+        </div>
+        
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('post-test')">
+            <i class="fas fa-clipboard-check"></i> Main Training Questions
+          </div>
+          <div class="tab" onclick="switchTab('refreshment')">
+            <i class="fas fa-sync-alt"></i> Refreshment Training Questions
+          </div>
+        </div>
+        
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="search-input" class="search-input" placeholder="Search questions..." onkeyup="filterQuestions()">
+        </div>
+        
+        <div id="post-test" class="tab-content active">
+          <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading Post-Test questions...</div>
+        </div>
+        
+        <div id="refreshment" class="tab-content">
+          <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading Refreshment Training questions...</div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Global variables to store question data
+      let postTestQuestions = [];
+      let refreshmentQuestions = [];
+      let currentTab = 'post-test';
+      
+      // Load questions when page loads
+      window.onload = function() {
+        // Initialize sidebar
+        setupSidebar();
+        
+        // If using Google Apps Script
+        if (typeof google !== 'undefined' && google.script) {
+          google.script.run
+            .withSuccessHandler(displayQuestions)
+            .withFailureHandler(handleError)
+            .getQuestions();
+        }
+      };
+      
+      // Display questions after they're loaded
+      function displayQuestions(data) {
+        postTestQuestions = data.postTest;
+        refreshmentQuestions = data.refreshment;
+        
+        renderQuestions('post-test', postTestQuestions);
+        renderQuestions('refreshment', refreshmentQuestions);
+      }
+
+      function setupSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainWrapper = document.getElementById('main-wrapper');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
+        const toggleIcon = sidebarToggle.querySelector('i');
+        
+        // Toggle sidebar collapse state
+        sidebarToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('collapsed');
+          mainWrapper.classList.toggle('sidebar-collapsed');
+          
+          if (sidebar.classList.contains('collapsed')) {
+            // Update icon when collapsed
+            toggleIcon.classList.remove('fa-chevron-left');
+            toggleIcon.classList.add('fa-chevron-right');
+          } else {
+            // Update icon when expanded
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-chevron-left');
+          }
+        });
+        
+        // Mobile sidebar toggle
+        sidebarMobileToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('active');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+          const isMobile = window.innerWidth <= 992;
+          if (isMobile && 
+              !sidebar.contains(event.target) && 
+              !sidebarMobileToggle.contains(event.target) &&
+              sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+          }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 992) {
+            sidebar.classList.remove('active');
+          }
+        });
+      }
+      
+      // Render questions for a specific tab
+      function renderQuestions(tabId, questions, searchTerm = '') {
+        const tabElement = document.getElementById(tabId);
+        tabElement.innerHTML = '';
+        
+        if (questions.length === 0) {
+          tabElement.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i> No questions found.</div>';
+          return;
+        }
+        
+        let filteredQuestions = questions;
+        if (searchTerm) {
+          searchTerm = searchTerm.toLowerCase();
+          filteredQuestions = questions.filter(q => 
+            q.question.toLowerCase().includes(searchTerm) || 
+            q.objective.toLowerCase().includes(searchTerm)
+          );
+        }
+        
+        if (filteredQuestions.length === 0) {
+          tabElement.innerHTML = '<div class="no-results"><i class="fas fa-search"></i> No matching questions found.</div>';
+          return;
+        }
+        
+        filteredQuestions.forEach((item) => {
+          const questionCard = document.createElement('div');
+          questionCard.className = 'question-card';
+          
+          const questionText = document.createElement('div');
+          questionText.className = 'question-text';
+          
+          const questionIcon = document.createElement('i');
+          questionIcon.className = 'fas fa-question-circle';
+          questionText.appendChild(questionIcon);
+          
+          const questionTextSpan = document.createElement('span');
+          questionTextSpan.textContent = item.question;
+          questionText.appendChild(questionTextSpan);
+          
+          const options = document.createElement('div');
+          options.className = 'options';
+          
+          const optionLetters = ['A', 'B', 'C', 'D'];
+          item.options.forEach((opt, i) => {
+            if (opt && opt.toString().trim()) {
+              const option = document.createElement('div');
+              option.className = 'option';
+              
+              const icon = document.createElement('i');
+              icon.className = 'fas fa-circle';
+              option.appendChild(icon);
+              
+              const optText = opt.toString();
+              const optSpan = document.createElement('span');
+              
+              if (optText.includes('*')) {
+                option.className += ' correct-answer';
+                icon.className = 'fas fa-check-circle';
+                optSpan.textContent = `${optionLetters[i]}. ${optText.replace('*', '')}`;
+              } else {
+                optSpan.textContent = `${optionLetters[i]}. ${optText}`;
+              }
+              
+              option.appendChild(optSpan);
+              options.appendChild(option);
+            }
+          });
+          
+          const objective = document.createElement('div');
+          objective.className = 'objective';
+          
+          const objectiveIcon = document.createElement('i');
+          objectiveIcon.className = 'fas fa-bullseye';
+          objective.appendChild(objectiveIcon);
+          
+          const objectiveText = document.createElement('span');
+          objectiveText.textContent = `Objective: ${item.objective}`;
+          objective.appendChild(objectiveText);
+          
+          questionCard.appendChild(questionText);
+          questionCard.appendChild(options);
+          questionCard.appendChild(objective);
+          
+          tabElement.appendChild(questionCard);
+        });
+      }
+      
+      // Switch between tabs
+      function switchTab(tabId) {
+        // Update active tab
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+        
+        // Update active content
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        
+        // Update active button
+        document.querySelectorAll('.add-button').forEach(button => {
+          button.classList.remove('active');
+        });
+        if (tabId === 'post-test') {
+          document.getElementById('post-test-button').classList.add('active');
+        } else {
+          document.getElementById('refreshment-button').classList.add('active');
+        }
+        
+        currentTab = tabId;
+        
+        // Apply current search filter to new tab
+        const searchTerm = document.getElementById('search-input').value;
+        filterQuestions(searchTerm);
+      }
+      
+      // Filter questions based on search input
+      function filterQuestions() {
+        const searchTerm = document.getElementById('search-input').value;
+        
+        if (currentTab === 'post-test') {
+          renderQuestions('post-test', postTestQuestions, searchTerm);
+        } else {
+          renderQuestions('refreshment', refreshmentQuestions, searchTerm);
+        }
+      }
+      
+      // Handle errors
+      function handleError(error) {
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.innerHTML = `<div class="error"><i class="fas fa-exclamation-triangle"></i> Error loading questions: ${error.message || error}</div>`;
+        });
+      }
+    </script>
+  </body>
+</html>

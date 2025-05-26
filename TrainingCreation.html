@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Registration Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        light: '#EAEAEA',
+                        purple: '#573FD7',
+                        blue: '#11358B',
+                        orange: '#E48F24',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+      }
+
+      /* Track */
+      ::-webkit-scrollbar-track {
+          background: #EAEAEA;
+          border-radius: 10px;
+      }
+
+      /* Handle */
+      ::-webkit-scrollbar-thumb {
+          background: #573FD7;
+          border-radius: 10px;
+      }
+
+      /* Handle on hover */
+      ::-webkit-scrollbar-thumb:hover {
+          background: #11358B;
+      }
+
+      /* Firefox scrollbar (only works on newer versions) */
+      * {
+          scrollbar-width: thin;
+          scrollbar-color: #573FD7 #EAEAEA;
+      }
+
+      /* Spinner Animation */
+      .spinner {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 8px solid transparent;
+          border-top-color: #573FD7;
+          border-bottom-color: #573FD7;
+          animation: spin 1.5s linear infinite;
+          filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+      }
+
+      .spinner-inner {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          border: 8px solid transparent;
+          border-left-color: #11358B;
+          border-right-color: #11358B;
+          animation: spin-reverse 1s linear infinite;
+      }
+
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+
+      @keyframes spin-reverse {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(-360deg); }
+      }
+
+      .pulse {
+          animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+      }
+      
+      .loading-text {
+          color: white;
+          font-weight: 600;
+          text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Trainee card styles */
+      .trainee-card {
+          transition: all 0.2s ease;
+      }
+      
+      .trainee-card:hover {
+          background-color: #f9fafb;
+      }
+      
+      .trainee-card.selected {
+          background-color: #EFF6FF;
+          border-color: #573FD7;
+      }
+
+      /* Modal animation */
+      .modal-enter {
+          animation: modalFadeIn 0.3s ease-out forwards;
+      }
+
+      .modal-leave {
+          animation: modalFadeOut 0.3s ease-in forwards;
+      }
+
+      @keyframes modalFadeIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+      }
+
+      @keyframes modalFadeOut {
+          from { opacity: 1; transform: scale(1); }
+          to { opacity: 0; transform: scale(0.95); }
+      }
+
+      /* Backdrop animation */
+      .backdrop-enter {
+          animation: backdropFadeIn 0.2s ease-out forwards;
+      }
+
+      .backdrop-leave {
+          animation: backdropFadeOut 0.2s ease-in forwards;
+      }
+
+      @keyframes backdropFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      @keyframes backdropFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+      }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple to-blue p-4 md:p-6">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="spinner flex items-center justify-center">
+                <div class="spinner-inner"></div>
+            </div>
+            <div class="absolute">
+                <i class="fas fa-user-graduate text-4xl text-white pulse"></i>
+            </div>
+        </div>
+        <p class="loading-text text-lg">Loading form options...</p>
+    </div>
+
+    <!-- Custom Modal System -->
+    <div id="modalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 hidden flex items-center justify-center backdrop-enter">
+        <div id="modalContainer" class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 modal-enter">
+            <div id="modalHeader" class="px-6 py-4 border-b flex items-center justify-between">
+                <h3 id="modalTitle" class="text-xl font-bold"></h3>
+                <button id="modalCloseBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalBody" class="px-6 py-4"></div>
+            <div id="modalFooter" class="px-6 py-3 border-t flex justify-end space-x-2"></div>
+        </div>
+    </div>
+
+    <!-- Unauthorized Message -->
+    <div id="unauthorizedMessage" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">Unauthorized Access</h2>
+            <p class="text-gray-700 text-lg">Please use your authorized account to access this form.</p>
+        </div>
+    </div>
+
+    <!-- Main Form Container -->
+    <div id="formContainer" class="container mx-auto max-w-2xl bg-white rounded-lg shadow-xl p-6 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-blue mb-6 md:mb-8">
+          <i class="fas fa-user-graduate text-blue-500 mr-2"></i> Training Creation Form
+        </h1>
+        <form id="trainingForm" class="space-y-6">
+            <div>
+                <label for="trainer" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-user-tie mr-2 text-gray-700"></i>Trainer
+                </label>
+                <input type="text" id="trainer" name="trainer" readonly
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 h-10 px-3 border-2 border-gray-300">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-hospital mr-2 text-gray-700"></i>Participating Healthcare Centre <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="healthcareSearch" placeholder="Search healthcare centres..."
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+              <div id="healthcareCentres" class="mt-1 max-h-40 overflow-y-auto border-2 border-gray-300 rounded-md p-2"></div>
+              <p id="healthcareCentresError" class="text-red-500 text-xs mt-1 hidden">Please select at least one healthcare centre.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-calendar-alt mr-2 text-gray-700"></i>Start Date and Time <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="startDate" name="startDate" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+                    <p id="startDateError" class="text-red-500 text-xs mt-1 hidden">Please select a start date and time.</p>
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-calendar-check mr-2 text-gray-700"></i>End Date and Time <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="endDate" name="endDate" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+                    <p id="endDateError" class="text-red-500 text-xs mt-1 hidden">Please select an end date and time.</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-barcode mr-2 text-gray-700"></i>Device Serial Number <span class="text-red-500">*</span>
+                </label>
+                <div id="deviceSerialNumbers" class="mt-1 max-h-40 overflow-y-auto border-2 border-gray-300 rounded-md p-2"></div>
+                
+                <!-- Custom Serial Number Input -->
+                <div class="mt-2 flex items-center">
+                    <input type="text" id="customSerialNumber" placeholder="Add custom serial number..." 
+                        class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+                    <button type="button" id="addCustomSerialBtn" 
+                        class="ml-2 bg-purple hover:bg-blue text-white px-3 py-2 rounded-md">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <p id="deviceSerialNumbersError" class="text-red-500 text-xs mt-1 hidden">Please select at least one device serial number.</p>
+            </div>
+            <div>
+                <label for="trainingType" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-graduation-cap mr-2 text-gray-700"></i>Training Type <span class="text-red-500">*</span>
+                </label>
+                <select id="trainingType" name="trainingType" required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+                    <option value="">Select Training Type</option>
+                    <option value="Main Training">Main Training</option>
+                    <option value="Refreshment Training">Refreshment Training</option>
+                </select>
+                <p id="trainingTypeError" class="text-red-500 text-xs mt-1 hidden">Please select a training type.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-users mr-2 text-gray-700"></i>Participating Trainees <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="traineeSearch" placeholder="Search trainees..."
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange focus:ring focus:ring-orange focus:ring-opacity-50 h-10 px-3 border-2 border-gray-300">
+                <div id="participatingTrainees" class="mt-1 max-h-60 overflow-y-auto border-2 border-gray-300 rounded-md p-2 space-y-2"></div>
+                <p id="participatingTraineesError" class="text-red-500 text-xs mt-1 hidden">Please select at least one trainee.</p>
+            </div>
+            <button type="submit" id="submitButton"
+                class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                <i class="fas fa-paper-plane mr-2"></i>
+                <span>Submit</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Modal System
+        const modal = {
+            backdrop: document.getElementById('modalBackdrop'),
+            container: document.getElementById('modalContainer'),
+            title: document.getElementById('modalTitle'),
+            body: document.getElementById('modalBody'),
+            footer: document.getElementById('modalFooter'),
+            closeBtn: document.getElementById('modalCloseBtn'),
+            
+            show: function(options) {
+                // Set modal content
+                this.title.textContent = options.title || '';
+                this.body.innerHTML = options.body || '';
+                this.footer.innerHTML = '';
+                
+                // Set modal type styling
+                this.container.classList.remove('border-blue-500', 'border-red-500', 'border-green-500');
+                this.title.classList.remove('text-blue-500', 'text-red-500', 'text-green-500');
+                
+                if (options.type === 'error') {
+                    this.container.classList.add('border-l-4', 'border-red-500');
+                    this.title.classList.add('text-red-500');
+                } else if (options.type === 'success') {
+                    this.container.classList.add('border-l-4', 'border-green-500');
+                    this.title.classList.add('text-green-500');
+                } else {
+                    this.container.classList.add('border-l-4', 'border-blue-500');
+                    this.title.classList.add('text-blue-500');
+                }
+                
+                // Add buttons
+                if (options.buttons && Array.isArray(options.buttons)) {
+                    options.buttons.forEach(button => {
+                        const btn = document.createElement('button');
+                        btn.textContent = button.text;
+                        btn.className = button.class || 'px-4 py-2 rounded-md';
+                        
+                        if (button.onClick) {
+                            btn.addEventListener('click', () => {
+                                button.onClick();
+                                if (button.closeOnClick !== false) {
+                                    this.hide();
+                                }
+                            });
+                        } else {
+                            btn.addEventListener('click', () => this.hide());
+                        }
+                        
+                        this.footer.appendChild(btn);
+                    });
+                } else {
+                    // Default OK button
+                    const okBtn = document.createElement('button');
+                    okBtn.textContent = 'OK';
+                    okBtn.className = 'px-4 py-2 bg-blue text-white rounded-md hover:bg-purple';
+                    okBtn.addEventListener('click', () => this.hide());
+                    this.footer.appendChild(okBtn);
+                }
+                
+                // Show modal
+                this.backdrop.classList.remove('hidden');
+                this.backdrop.classList.add('backdrop-enter');
+                this.container.classList.add('modal-enter');
+                
+                // Add close button event
+                this.closeBtn.addEventListener('click', () => this.hide());
+                
+                // Add escape key listener
+                document.addEventListener('keydown', this.escapeHandler);
+            },
+            
+            hide: function() {
+                this.container.classList.remove('modal-enter');
+                this.container.classList.add('modal-leave');
+                this.backdrop.classList.remove('backdrop-enter');
+                this.backdrop.classList.add('backdrop-leave');
+                
+                // Remove escape key listener
+                document.removeEventListener('keydown', this.escapeHandler);
+                
+                // Hide after animation completes
+                setTimeout(() => {
+                    this.backdrop.classList.add('hidden');
+                    this.backdrop.classList.remove('backdrop-leave');
+                    this.container.classList.remove('modal-leave');
+                }, 300);
+            },
+            
+            escapeHandler: function(e) {
+                if (e.key === 'Escape') {
+                    modal.hide();
+                }
+            }
+        };
+        
+        // Initialize close button
+        modal.closeBtn.addEventListener('click', () => modal.hide());
+        
+        // Form Validation Functions
+        function validateHealthcareCentres() {
+            const checkboxes = document.querySelectorAll('#healthcareCentres input[type="checkbox"]');
+            const errorElement = document.getElementById('healthcareCentresError');
+            const isValid = Array.from(checkboxes).some(cb => cb.checked);
+            errorElement.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+
+        function validateParticipatingTrainees() {
+            const checkboxes = document.querySelectorAll('#participatingTrainees input[type="checkbox"]');
+            const errorElement = document.getElementById('participatingTraineesError');
+            const isValid = Array.from(checkboxes).some(cb => cb.checked);
+            errorElement.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+        
+        function validateDeviceSerialNumbers() {
+            const checkboxes = document.querySelectorAll('#deviceSerialNumbers input[type="checkbox"]');
+            const errorElement = document.getElementById('deviceSerialNumbersError');
+            const isValid = Array.from(checkboxes).some(cb => cb.checked);
+            errorElement.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+        
+        function validateTrainingType() {
+            const trainingType = document.getElementById('trainingType');
+            const errorElement = document.getElementById('trainingTypeError');
+            const isValid = trainingType.value !== '';
+            errorElement.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+        
+        function validateDates() {
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const startDateError = document.getElementById('startDateError');
+            const endDateError = document.getElementById('endDateError');
+            
+            const isStartValid = startDate.value.trim() !== '';
+            const isEndValid = endDate.value.trim() !== '';
+            
+            startDateError.classList.toggle('hidden', isStartValid);
+            endDateError.classList.toggle('hidden', isEndValid);
+            
+            return isStartValid && isEndValid;
+        }
+        
+        function validateForm() {
+            const isHealthcareCentresValid = validateHealthcareCentres();
+            const isParticipatingTraineesValid = validateParticipatingTrainees();
+            const isDeviceSerialNumbersValid = validateDeviceSerialNumbers();
+            const isTrainingTypeValid = validateTrainingType();
+            const areDatesValid = validateDates();
+            
+            return isHealthcareCentresValid && 
+                   isParticipatingTraineesValid && 
+                   isDeviceSerialNumbersValid && 
+                   isTrainingTypeValid &&
+                   areDatesValid;
+        }
+
+        let isSubmitting = false;
+        
+        function loadFormOptions() {
+            google.script.run
+                .withSuccessHandler(function(trainerName) {
+                    if (trainerName === 'Unauthorised User') {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        document.getElementById('unauthorizedMessage').classList.remove('hidden');
+                        document.getElementById('formContainer').style.display = 'none';
+                    } else {
+                        document.getElementById('trainer').value = trainerName;
+                        google.script.run
+                            .withSuccessHandler(function(options) {
+                                populateCheckboxes('healthcareCentres', options.healthcareCentres);
+                                populateCheckboxes('deviceSerialNumbers', options.deviceSerialNumbers);
+                                populateTrainees(options.trainees);
+                                setupTraineeSearch();
+                                setupHealthcareSearch();
+                                setupCustomSerialNumber();
+                                document.getElementById('loadingOverlay').style.display = 'none';
+                            })
+                            .withFailureHandler(function(error) {
+                                console.error('Failed to load form options:', error);
+                                document.getElementById('loadingOverlay').style.display = 'none';
+                                
+                                modal.show({
+                                    title: 'Error Loading Form',
+                                    body: 'Failed to load form options. Please try refreshing the page.',
+                                    type: 'error'
+                                });
+                            })
+                            .getFormOptions();
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Failed to get trainer name:', error);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    
+                    modal.show({
+                        title: 'Error',
+                        body: 'Failed to load trainer information. Please try refreshing the page.',
+                        type: 'error'
+                    });
+                })
+                .getTrainerName();
+        }
+        
+        function populateCheckboxes(fieldId, options) {
+            var container = document.getElementById(fieldId);
+            container.innerHTML = '';
+            options.forEach(function(option) {
+                var div = document.createElement('div');
+                div.className = 'flex items-center py-1';
+        
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = fieldId + '_' + option;
+                checkbox.name = fieldId + '[]';
+                checkbox.value = option;
+                checkbox.className = 'h-5 w-5 text-orange focus:ring-orange border-gray-300 rounded';
+        
+                if (fieldId === 'healthcareCentres') {
+                    checkbox.addEventListener('change', validateHealthcareCentres);
+                } else if (fieldId === 'deviceSerialNumbers') {
+                    checkbox.addEventListener('change', validateDeviceSerialNumbers);
+                }
+
+                var label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.appendChild(document.createTextNode(option));
+                label.className = 'ml-2 block text-sm text-gray-900';
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                container.appendChild(div);
+            });
+        }
+        
+        function setupCustomSerialNumber() {
+            const addBtn = document.getElementById('addCustomSerialBtn');
+            const input = document.getElementById('customSerialNumber');
+            const container = document.getElementById('deviceSerialNumbers');
+            
+            addBtn.addEventListener('click', function() {
+                const serialNumber = input.value.trim();
+                
+                if (serialNumber === '') {
+                    modal.show({
+                        title: 'Error',
+                        body: 'Please enter a serial number.',
+                        type: 'error'
+                    });
+                    return;
+                }
+                
+                // Check if serial number already exists
+                const existingCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                for (let i = 0; i < existingCheckboxes.length; i++) {
+                    if (existingCheckboxes[i].value === serialNumber) {
+                        modal.show({
+                            title: 'Duplicate Serial Number',
+                            body: 'This serial number already exists in the list.',
+                            type: 'error'
+                        });
+                        return;
+                    }
+                }
+                
+                // Create new checkbox for custom serial number
+                const div = document.createElement('div');
+                div.className = 'flex items-center py-1';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'deviceSerialNumbers_' + serialNumber;
+                checkbox.name = 'deviceSerialNumbers[]';
+                checkbox.value = serialNumber;
+                checkbox.className = 'h-5 w-5 text-orange focus:ring-orange border-gray-300 rounded';
+                checkbox.checked = true; // Auto-check the newly added serial number
+                checkbox.addEventListener('change', validateDeviceSerialNumbers);
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.appendChild(document.createTextNode(serialNumber + ' (custom)'));
+                label.className = 'ml-2 block text-sm text-gray-900';
+                
+                // Add delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'ml-auto text-red-500 hover:text-red-700';
+                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                deleteBtn.addEventListener('click', function() {
+                    div.remove();
+                    validateDeviceSerialNumbers();
+                });
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                div.appendChild(deleteBtn);
+                
+                container.appendChild(div);
+                input.value = ''; // Clear input
+                validateDeviceSerialNumbers();
+            });
+            
+            // Allow pressing Enter to add serial number
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addBtn.click();
+                }
+            });
+        }
+        
+        function populateTrainees(trainees) {
+            var container = document.getElementById('participatingTrainees');
+            container.innerHTML = '';
+            
+            trainees.forEach(function(trainee, index) {
+                // Create a card-like element for each trainee
+                var card = document.createElement('div');
+                card.className = 'trainee-card border rounded-md p-3 relative';
+                
+                // Create checkbox for selection
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'participatingTrainees_' + index;
+                checkbox.name = 'participatingTrainees[]';
+                // Store all trainee data as a JSON string in the value
+                checkbox.value = JSON.stringify({
+                    name: trainee.name,
+                    icPassport: trainee.icPassport,
+                    id: trainee.id,
+                    healthcare: trainee.healthcare
+                });
+                checkbox.className = 'absolute right-3 top-3 h-5 w-5 text-orange focus:ring-orange border-gray-300 rounded';
+                checkbox.addEventListener('change', function() {
+                    card.classList.toggle('selected', this.checked);
+                    validateParticipatingTrainees();
+                });
+                
+                // Create trainee info content
+                var content = document.createElement('div');
+                content.className = 'pr-8'; // Add padding to make room for checkbox
+                
+                // Name with icon
+                var nameDiv = document.createElement('div');
+                nameDiv.className = 'font-medium text-gray-900 flex items-center';
+                var nameIcon = document.createElement('i');
+                nameIcon.className = 'fas fa-user text-purple mr-2 text-sm';
+                nameDiv.appendChild(nameIcon);
+                nameDiv.appendChild(document.createTextNode(trainee.name));
+                
+                // ID with icon
+                var idDiv = document.createElement('div');
+                idDiv.className = 'text-sm text-gray-600 mt-1 flex items-center';
+                var idIcon = document.createElement('i');
+                idIcon.className = 'fas fa-id-card text-blue mr-2 text-xs';
+                idDiv.appendChild(idIcon);
+                idDiv.appendChild(document.createTextNode('ID: ' + trainee.id));
+                
+                // IC/Passport with icon
+                var icDiv = document.createElement('div');
+                icDiv.className = 'text-sm text-gray-600 mt-1 flex items-center';
+                var icIcon = document.createElement('i');
+                icIcon.className = 'fas fa-passport text-blue mr-2 text-xs';
+                icDiv.appendChild(icIcon);
+                icDiv.appendChild(document.createTextNode('IC/Passport: ' + trainee.icPassport));
+                
+                // Healthcare with icon (if available)
+                if (trainee.healthcare) {
+                    var healthcareDiv = document.createElement('div');
+                    healthcareDiv.className = 'text-sm text-gray-600 mt-1 flex items-center';
+                    var healthcareIcon = document.createElement('i');
+                    healthcareIcon.className = 'fas fa-hospital text-orange mr-2 text-xs';
+                    healthcareDiv.appendChild(healthcareIcon);
+                    healthcareDiv.appendChild(document.createTextNode('Healthcare: ' + trainee.healthcare));
+                    content.appendChild(healthcareDiv);
+                }
+                
+                // Add all elements to the content div
+                content.appendChild(nameDiv);
+                content.appendChild(idDiv);
+                content.appendChild(icDiv);
+                
+                // Add content and checkbox to the card
+                card.appendChild(content);
+                card.appendChild(checkbox);
+                
+                // Make the entire card clickable to toggle the checkbox
+                card.addEventListener('click', function(e) {
+                    if (e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        card.classList.toggle('selected', checkbox.checked);
+                        validateParticipatingTrainees();
+                    }
+                });
+                
+                // Add the card to the container
+                container.appendChild(card);
+            });
+        }
+        
+        function setupTraineeSearch() {
+          var searchInput = document.getElementById('traineeSearch');
+          var traineesContainer = document.getElementById('participatingTrainees');
+          var traineeCards = traineesContainer.getElementsByClassName('trainee-card');
+
+          searchInput.addEventListener('input', function() {
+              var filter = this.value.toLowerCase();
+              for (var i = 0; i < traineeCards.length; i++) {
+                  var traineeCard = traineeCards[i];
+                  var traineeText = traineeCard.textContent || traineeCard.innerText;
+                  if (traineeText.toLowerCase().indexOf(filter) > -1) {
+                      traineeCard.style.display = "";
+                  } else {
+                      traineeCard.style.display = "none";
+                  }
+              }
+          });
+        }
+
+        function setupHealthcareSearch() {
+          var searchInput = document.getElementById('healthcareSearch');
+          var healthcareContainer = document.getElementById('healthcareCentres');
+          var healthcareItems = healthcareContainer.getElementsByTagName('div');
+
+          searchInput.addEventListener('input', function() {
+              var filter = this.value.toLowerCase();
+              for (var i = 0; i < healthcareItems.length; i++) {
+                  var item = healthcareItems[i];
+                  var text = item.textContent || item.innerText;
+                  if (text.toLowerCase().indexOf(filter) > -1) {
+                      item.style.display = "";
+                  } else {
+                      item.style.display = "none";
+                  }
+              }
+          });
+        }
+        
+        // Add validation to training type select
+        document.getElementById('trainingType').addEventListener('change', validateTrainingType);
+        
+        // Add validation to date fields
+        document.getElementById('startDate').addEventListener('change', validateDates);
+        document.getElementById('endDate').addEventListener('change', validateDates);
+                
+        document.getElementById('trainingForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            if (isSubmitting) return;
+            
+            // Validate all form fields
+            if (!validateForm()) {
+                modal.show({
+                    title: 'Form Validation Error',
+                    body: 'Please fill in all required fields before submitting.',
+                    type: 'error'
+                });
+                return;
+            }
+
+            isSubmitting = true;
+            var submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+            
+            // Process trainee data from JSON back to the format expected by the server
+            var selectedTrainees = getCheckedTrainees();
+            
+            var formData = {
+                trainer: document.getElementById('trainer').value,
+                healthcareCentres: getCheckedValues('healthcareCentres'),
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                deviceSerialNumbers: getCheckedValues('deviceSerialNumbers'),
+                trainingType: document.getElementById('trainingType').value,
+                participatingTrainees: selectedTrainees
+            };
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    isSubmitting = false;
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Submit';
+                    
+                    if (result.success) {
+                        modal.show({
+                            title: 'Success',
+                            body: result.message,
+                            type: 'success',
+                            buttons: [
+                                {
+                                    text: 'OK',
+                                    class: 'px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600',
+                                    onClick: function() {
+                                        // Reset form
+                                        document.getElementById('trainingForm').reset();
+                                        
+                                        // Reset error messages
+                                        document.getElementById('healthcareCentresError').classList.add('hidden');
+                                        document.getElementById('participatingTraineesError').classList.add('hidden');
+                                        document.getElementById('deviceSerialNumbersError').classList.add('hidden');
+                                        document.getElementById('trainingTypeError').classList.add('hidden');
+                                        document.getElementById('startDateError').classList.add('hidden');
+                                        document.getElementById('endDateError').classList.add('hidden');
+                                        
+                                        // Reset trainee card selections
+                                        var traineeCards = document.getElementsByClassName('trainee-card');
+                                        for (var i = 0; i < traineeCards.length; i++) {
+                                            traineeCards[i].classList.remove('selected');
+                                        }
+                                        
+                                        // Reset checkboxes
+                                        var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                                        checkboxes.forEach(function(checkbox) {
+                                            checkbox.checked = false;
+                                        });
+                                        
+                                        // Clear custom serial numbers
+                                        var customSerialNumbers = document.querySelectorAll('#deviceSerialNumbers div');
+                                        customSerialNumbers.forEach(function(div) {
+                                            if (div.querySelector('label').textContent.includes('(custom)')) {
+                                                div.remove();
+                                            }
+                                        });
+                                        
+                                        // Refresh trainer name
+                                        google.script.run
+                                            .withSuccessHandler(function(trainerName) {
+                                                document.getElementById('trainer').value = trainerName;
+                                            })
+                                            .withFailureHandler(function(error) {
+                                                console.error('Failed to get updated trainer name:', error);
+                                            })
+                                            .getTrainerName();
+                                    }
+                                }
+                            ]
+                        });
+                    } else {
+                        modal.show({
+                            title: 'Error',
+                            body: result.message,
+                            type: 'error'
+                        });
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    isSubmitting = false;
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Submit';
+                    
+                    modal.show({
+                        title: 'Submission Error',
+                        body: 'An error occurred: ' + error.message,
+                        type: 'error'
+                    });
+                })
+                .handleFormSubmission(formData);
+        };
+        
+        function getCheckedValues(fieldName) {
+            var checkboxes = document.getElementsByName(fieldName + '[]');
+            var checkedValues = [];
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    checkedValues.push(checkboxes[i].value);
+                }
+            }
+            return checkedValues;
+        }
+        
+        function getCheckedTrainees() {
+            var checkboxes = document.getElementsByName('participatingTrainees[]');
+            var selectedTrainees = [];
+            
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    var traineeData = JSON.parse(checkboxes[i].value);
+                    // Format the trainee data as expected by the server
+                    selectedTrainees.push(
+                        traineeData.name + ' - ' + 
+                        traineeData.icPassport + ' - ' + 
+                        traineeData.id + ' - ' + 
+                        traineeData.healthcare
+                    );
+                }
+            }
+            
+            return selectedTrainees;
+        }
+        
+        window.onload = loadFormOptions;
+        
+        flatpickr("#startDate", {
+            enableTime: true,
+            dateFormat: "d/m/Y H:i K",
+            time_24hr: false,
+            onChange: function() {
+                validateDates();
+            }
+        });
+
+        flatpickr("#endDate", {
+            enableTime: true,
+            dateFormat: "d/m/Y H:i K",
+            time_24hr: false,
+            onChange: function() {
+                validateDates();
+            }
+        });
+    </script>
+</body>
+</html>

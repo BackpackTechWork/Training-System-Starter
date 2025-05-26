@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              light: '#EAEAEA',
+              purple: '#573FD7',
+              blue: '#11358B',
+              orange: '#E48F24',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Infinite gradient background */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      body {
+        background: linear-gradient(to bottom right, #573FD7, #11358B);
+        background-attachment: fixed; /* Makes the gradient fixed regardless of scroll */
+        min-height: 100vh;
+        padding: 1.5rem;
+      }
+      
+      /* Custom spinner animation */
+      .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 15px auto;
+        background-color: #E48F24;
+        border-radius: 100%;  
+        -webkit-animation: sk-scaleout 1.0s infinite ease-in-out;
+        animation: sk-scaleout 1.0s infinite ease-in-out;
+      }
+
+      @-webkit-keyframes sk-scaleout {
+        0% { -webkit-transform: scale(0) }
+        100% {
+          -webkit-transform: scale(1.0);
+          opacity: 0;
+        }
+      }
+
+      @keyframes sk-scaleout {
+        0% { 
+          -webkit-transform: scale(0);
+          transform: scale(0);
+        } 
+        100% {
+          -webkit-transform: scale(1.0);
+          transform: scale(1.0);
+          opacity: 0;
+        }
+      }
+
+      /* Custom checkbox styles */
+      .custom-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        transition: all 0.2s;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      
+      .custom-checkbox:hover {
+        background-color: #f9f9f9;
+      }
+      
+      .custom-checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        accent-color: #573FD7;
+      }
+      
+      /* Custom dropdown */
+      .custom-dropdown {
+        position: relative;
+        width: 100%;
+      }
+      
+      .dropdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .dropdown-header:hover {
+        border-color: #573FD7;
+      }
+      
+      .dropdown-body {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000; /* Higher z-index to ensure visibility */
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 5px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: none;
+      }
+      
+      .dropdown-body.open {
+        display: block;
+      }
+      
+      .dropdown-item {
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .dropdown-item:hover {
+        background-color: #f9f9f9;
+      }
+      
+      .dropdown-item.selected {
+        background-color: #EFF6FF;
+      }
+      
+      .dropdown-search {
+        padding: 8px 15px;
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1;
+      }
+      
+      .dropdown-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+      }
+      
+      /* Selected items display */
+      .selected-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 5px;
+      }
+      
+      .selected-item {
+        display: flex;
+        align-items: center;
+        background: #EFF6FF;
+        border: 1px solid #DBEAFE;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      
+      .selected-item .remove {
+        margin-left: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      
+      /* Dropdown items with scrollbar */
+      .dropdown-items {
+        max-height: 300px; /* Show a reasonable number of items */
+        overflow-y: auto; /* Add scrollbar when needed */
+      }
+      
+      /* Custom scrollbar styling */
+      .dropdown-items::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      .dropdown-items::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      
+      .dropdown-items::-webkit-scrollbar-thumb {
+        background: #573FD7;
+        border-radius: 10px;
+      }
+      
+      .dropdown-items::-webkit-scrollbar-thumb:hover {
+        background: #4930b8;
+      }
+      
+      /* Fix for container */
+      .main-container {
+        position: relative; /* Ensure relative positioning */
+        overflow: visible !important; /* Prevent overflow clipping */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl main-container">
+      <div class="p-6">
+<h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+  <span class="material-icons mr-2 text-purple">manage_accounts</span>
+  Add/Remove Trainees
+</h1>
+
+        
+        <div class="form-group mb-6">
+          <label for="actionType" class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+            <span class="material-icons mr-2 text-orange">category</span>
+            Action Type:
+          </label>
+          <div class="relative">
+            <select id="actionType" onchange="handleActionTypeChange()" class="block w-full bg-white border border-gray-300 rounded-lg py-3 px-4 pr-8 text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent shadow-sm transition-all">
+              <option value="">Select an action</option>
+              <option value="remove">Remove Trainees</option>
+              <option value="add">Add Trainees</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <span class="material-icons">expand_more</span>
+            </div>
+          </div>
+        </div>
+        
+        <div id="removeSection" class="hidden transition-all">
+          <div class="form-group mb-6">
+            <label class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+              <span class="material-icons mr-2 text-orange">person_remove</span>
+              Select Trainees to Remove:
+            </label>
+            
+            <div id="removeDropdown" class="custom-dropdown">
+              <div class="dropdown-header" onclick="toggleDropdown('removeDropdownBody')">
+                <span id="removeDropdownText">Select trainees...</span>
+                <span class="material-icons">expand_more</span>
+              </div>
+              <div id="removeDropdownBody" class="dropdown-body">
+                <div class="dropdown-search">
+                  <input type="text" placeholder="Search trainees..." onkeyup="filterDropdown(this, 'removeDropdownItems')">
+                </div>
+                <div id="removeDropdownItems" class="dropdown-items">
+                  <div class="p-3 text-center text-gray-500">Loading trainees...</div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="removeSelectedItems" class="selected-items"></div>
+            
+            <p class="text-xs text-gray-500 mt-2 flex items-center">
+              <span class="material-icons mr-1 text-xs">info</span>
+              Click on a trainee to select/deselect
+            </p>
+          </div>
+          
+          <button onclick="submitRemoval()" class="w-full bg-orange hover:bg-opacity-90 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl flex items-center justify-center transition-all">
+            <span class="material-icons mr-2">delete</span>
+            Remove Selected Trainees
+          </button>
+          
+          <div id="removalLoaderContainer" class="hidden mt-4 flex justify-center">
+            <div class="spinner"></div>
+          </div>
+          
+          <div id="removalStatus" class="mt-4"></div>
+        </div>
+        
+        <div id="addSection" class="hidden transition-all">
+          <div class="form-group mb-6">
+            <label class="block text-gray-700 text-sm font-medium mb-2 flex items-center">
+              <span class="material-icons mr-2 text-orange">person_add</span>
+              Select Trainees to Add:
+            </label>
+            
+            <div id="addDropdown" class="custom-dropdown">
+              <div class="dropdown-header" onclick="toggleDropdown('addDropdownBody')">
+                <span id="addDropdownText">Select trainees...</span>
+                <span class="material-icons">expand_more</span>
+              </div>
+              <div id="addDropdownBody" class="dropdown-body">
+                <div class="dropdown-search">
+                  <input type="text" placeholder="Search trainees..." onkeyup="filterDropdown(this, 'addDropdownItems')">
+                </div>
+                <div id="addDropdownItems" class="dropdown-items">
+                  <div class="p-3 text-center text-gray-500">Loading trainees...</div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="addSelectedItems" class="selected-items"></div>
+            
+            <p class="text-xs text-gray-500 mt-2 flex items-center">
+              <span class="material-icons mr-1 text-xs">info</span>
+              Click on a trainee to select/deselect
+            </p>
+          </div>
+          
+          <button onclick="submitAddition()" class="w-full bg-orange hover:bg-opacity-90 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl flex items-center justify-center transition-all">
+            <span class="material-icons mr-2">add_circle</span>
+            Add Selected Trainees
+          </button>
+          
+          <div id="additionLoaderContainer" class="hidden mt-4 flex justify-center">
+            <div class="spinner"></div>
+          </div>
+          
+          <div id="additionStatus" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+       
+      let removeTrainees = [];
+      let addTrainees = [];
+      let selectedRemoveTrainees = [];
+      let selectedAddTrainees = [];
+      
+       
+      document.addEventListener('DOMContentLoaded', function() {
+         
+        document.getElementById('removeSection').classList.add('hidden');
+        document.getElementById('addSection').classList.add('hidden');
+        
+         
+        document.addEventListener('click', function(event) {
+          const removeDropdown = document.getElementById('removeDropdown');
+          const addDropdown = document.getElementById('addDropdown');
+          
+          if (removeDropdown && !removeDropdown.contains(event.target)) {
+            document.getElementById('removeDropdownBody').classList.remove('open');
+          }
+          
+          if (addDropdown && !addDropdown.contains(event.target)) {
+            document.getElementById('addDropdownBody').classList.remove('open');
+          }
+        });
+        
+         
+         
+        try {
+           
+          if (window.parent && window.parent.document) {
+            const iframe = window.parent.document.querySelector('iframe');
+            if (iframe) {
+              iframe.style.overflow = 'visible';
+            }
+          }
+        } catch (e) {
+           
+          console.log('Could not access parent frame:', e);
+        }
+      });
+      
+       
+      function toggleDropdown(id) {
+        const dropdown = document.getElementById(id);
+        dropdown.classList.toggle('open');
+        
+         
+        if (id === 'removeDropdownBody') {
+          document.getElementById('addDropdownBody').classList.remove('open');
+        } else {
+          document.getElementById('removeDropdownBody').classList.remove('open');
+        }
+        
+         
+        if (dropdown.classList.contains('open')) {
+          const searchInput = dropdown.querySelector('input');
+          if (searchInput) {
+            setTimeout(() => searchInput.focus(), 100);
+          }
+        }
+      }
+      
+       
+      function filterDropdown(input, itemsId) {
+        const filter = input.value.toUpperCase();
+        const items = document.getElementById(itemsId).getElementsByClassName('custom-checkbox');
+        
+        for (let i = 0; i < items.length; i++) {
+          const txtValue = items[i].textContent || items[i].innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            items[i].style.display = "";
+          } else {
+            items[i].style.display = "none";
+          }
+        }
+      }
+      
+       
+      function handleActionTypeChange() {
+        const actionType = document.getElementById('actionType').value;
+        
+         
+        document.getElementById('removeSection').classList.add('hidden');
+        document.getElementById('addSection').classList.add('hidden');
+        
+        if (actionType === 'remove') {
+          document.getElementById('removeSection').classList.remove('hidden');
+          loadTraineesForRemoval();
+        } else if (actionType === 'add') {
+          document.getElementById('addSection').classList.remove('hidden');
+          loadTraineesForAdding();
+        }
+      }
+      
+       
+      function toggleTraineeSelection(type, index) {
+        if (type === 'remove') {
+          const trainee = removeTrainees[index];
+          const existingIndex = selectedRemoveTrainees.findIndex(t => 
+            t.name === trainee.name && t.traineeId === trainee.traineeId && t.icPassport === trainee.icPassport
+          );
+          
+          if (existingIndex === -1) {
+            selectedRemoveTrainees.push(trainee);
+          } else {
+            selectedRemoveTrainees.splice(existingIndex, 1);
+          }
+          
+          updateSelectedItems('remove');
+        } else {
+          const trainee = addTrainees[index];
+          const existingIndex = selectedAddTrainees.findIndex(t => 
+            t.name === trainee.name && t.traineeId === trainee.traineeId && t.icPassport === trainee.icPassport
+          );
+          
+          if (existingIndex === -1) {
+            selectedAddTrainees.push(trainee);
+          } else {
+            selectedAddTrainees.splice(existingIndex, 1);
+          }
+          
+          updateSelectedItems('add');
+        }
+      }
+      
+       
+      function updateSelectedItems(type) {
+        const container = document.getElementById(`${type}SelectedItems`);
+        const dropdownText = document.getElementById(`${type}DropdownText`);
+        const selectedTrainees = type === 'remove' ? selectedRemoveTrainees : selectedAddTrainees;
+        
+        container.innerHTML = '';
+        
+        if (selectedTrainees.length === 0) {
+          dropdownText.textContent = 'Select trainees...';
+        } else {
+          dropdownText.textContent = `${selectedTrainees.length} trainee(s) selected`;
+          
+          selectedTrainees.forEach((trainee, index) => {
+            const item = document.createElement('div');
+            item.className = 'selected-item';
+            item.innerHTML = `
+              ${trainee.name.split(' ')[0]}
+              <span class="remove material-icons" onclick="removeSelectedItem('${type}', ${index})">close</span>
+            `;
+            container.appendChild(item);
+          });
+        }
+        
+         
+        const checkboxes = document.querySelectorAll(`#${type}DropdownItems .custom-checkbox input`);
+        checkboxes.forEach((checkbox, index) => {
+          const trainee = type === 'remove' ? removeTrainees[index] : addTrainees[index];
+          const isSelected = (type === 'remove' ? selectedRemoveTrainees : selectedAddTrainees).some(t => 
+            t.name === trainee.name && t.traineeId === trainee.traineeId && t.icPassport === trainee.icPassport
+          );
+          
+          checkbox.checked = isSelected;
+        });
+      }
+      
+       
+      function removeSelectedItem(type, index) {
+        if (type === 'remove') {
+          selectedRemoveTrainees.splice(index, 1);
+        } else {
+          selectedAddTrainees.splice(index, 1);
+        }
+        
+        updateSelectedItems(type);
+      }
+      
+       
+      function loadTraineesForRemoval() {
+        const container = document.getElementById('removeDropdownItems');
+        container.innerHTML = '<div class="p-3 text-center text-gray-500">Loading trainees...</div>';
+        
+        google.script.run
+          .withSuccessHandler(function(trainees) {
+            removeTrainees = trainees;
+            container.innerHTML = '';
+            
+            if (trainees.length === 0) {
+              container.innerHTML = '<div class="p-3 text-center text-gray-500">No trainees found</div>';
+            } else {
+              trainees.forEach((trainee, index) => {
+                const item = document.createElement('div');
+                item.className = 'custom-checkbox';
+                item.innerHTML = `
+                  <input type="checkbox" id="remove-trainee-${index}" onchange="toggleTraineeSelection('remove', ${index})">
+                  <label for="remove-trainee-${index}">${trainee.display}</label>
+                `;
+                container.appendChild(item);
+              });
+            }
+          })
+          .withFailureHandler(function(error) {
+            container.innerHTML = `<div class="p-3 text-center text-red-500">Error loading trainees: ${error}</div>`;
+          })
+          .getTraineesForRemoval();
+      }
+      
+       
+      function loadTraineesForAdding() {
+        const container = document.getElementById('addDropdownItems');
+        container.innerHTML = '<div class="p-3 text-center text-gray-500">Loading trainees...</div>';
+        
+        google.script.run
+          .withSuccessHandler(function(trainees) {
+            addTrainees = trainees;
+            container.innerHTML = '';
+            
+            if (trainees.length === 0) {
+              container.innerHTML = '<div class="p-3 text-center text-gray-500">No trainees found</div>';
+            } else {
+              trainees.forEach((trainee, index) => {
+                const item = document.createElement('div');
+                item.className = 'custom-checkbox';
+                item.innerHTML = `
+                  <input type="checkbox" id="add-trainee-${index}" onchange="toggleTraineeSelection('add', ${index})">
+                  <label for="add-trainee-${index}">${trainee.display}</label>
+                `;
+                container.appendChild(item);
+              });
+            }
+          })
+          .withFailureHandler(function(error) {
+            container.innerHTML = `<div class="p-3 text-center text-red-500">Error loading trainees: ${error}</div>`;
+          })
+          .getTraineesForAdding();
+      }
+      
+      function lockForm(isLocked) {
+         
+        const formElements = document.querySelectorAll('button, select, input');
+        formElements.forEach(element => {
+          element.disabled = isLocked;
+        });
+        
+         
+        const mainContainer = document.querySelector('.main-container');
+        if (isLocked) {
+          mainContainer.classList.add('opacity-70');
+        } else {
+          mainContainer.classList.remove('opacity-70');
+        }
+      }
+
+       
+      function submitRemoval() {
+        if (selectedRemoveTrainees.length === 0) {
+          document.getElementById('removalStatus').innerHTML = 
+            '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+            '<span class="material-icons mr-2">error</span>' +
+            'Please select at least one trainee to remove.' +
+            '</div>';
+          return;
+        }
+        
+         
+        lockForm(true);
+        
+         
+        document.getElementById('removalLoaderContainer').classList.remove('hidden');
+        document.getElementById('removalStatus').innerHTML = '';
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+             
+            document.getElementById('removalLoaderContainer').classList.add('hidden');
+            
+            if (result.success) {
+              document.getElementById('removalStatus').innerHTML = 
+                '<div class="bg-green-100 border border-green-400 text-green-700 rounded-lg p-3 flex items-center">' +
+                '<span class="material-icons mr-2">check_circle</span>' +
+                result.message +
+                '</div>';
+              
+               
+              setTimeout(function() {
+                google.script.host.close();
+              }, 1500);
+            } else {
+              document.getElementById('removalStatus').innerHTML = 
+                '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+                '<span class="material-icons mr-2">error</span>' +
+                'Error: ' + result.message +
+                '</div>';
+               
+              lockForm(false);
+            }
+          })
+          .withFailureHandler(function(error) {
+             
+            document.getElementById('removalLoaderContainer').classList.add('hidden');
+            document.getElementById('removalStatus').innerHTML = 
+              '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+              '<span class="material-icons mr-2">error</span>' +
+              'Error: ' + error +
+              '</div>';
+             
+            lockForm(false);
+          })
+          .removeTrainees(selectedRemoveTrainees);
+      }
+      
+       
+      function submitAddition() {
+        if (selectedAddTrainees.length === 0) {
+          document.getElementById('additionStatus').innerHTML = 
+            '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+            '<span class="material-icons mr-2">error</span>' +
+            'Please select at least one trainee to add.' +
+            '</div>';
+          return;
+        }
+        
+         
+        lockForm(true);
+        
+         
+        document.getElementById('additionLoaderContainer').classList.remove('hidden');
+        document.getElementById('additionStatus').innerHTML = '';
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+             
+            document.getElementById('additionLoaderContainer').classList.add('hidden');
+            
+            if (result.success) {
+              document.getElementById('additionStatus').innerHTML = 
+                '<div class="bg-green-100 border border-green-400 text-green-700 rounded-lg p-3 flex items-center">' +
+                '<span class="material-icons mr-2">check_circle</span>' +
+                result.message +
+                '</div>';
+              
+               
+              setTimeout(function() {
+                google.script.host.close();
+              }, 1500);
+            } else {
+              document.getElementById('additionStatus').innerHTML = 
+                '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+                '<span class="material-icons mr-2">error</span>' +
+                'Error: ' + result.message +
+                '</div>';
+               
+              lockForm(false);
+            }
+          })
+          .withFailureHandler(function(error) {
+             
+            document.getElementById('additionLoaderContainer').classList.add('hidden');
+            document.getElementById('additionStatus').innerHTML = 
+              '<div class="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3 flex items-center">' +
+              '<span class="material-icons mr-2">error</span>' +
+              'Error: ' + error +
+              '</div>';
+             
+            lockForm(false);
+          })
+          .addTrainees(selectedAddTrainees);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      /* Reset and Base Styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+    /* Custom Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #E48F24;
+      border-radius: 10px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d17d1a;
+    }
+
+    /* Firefox scrollbar */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #E48F24 rgba(255, 255, 255, 0.1);
+    }
+      
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(to bottom right, #573FD5, #1f46a3);
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+      }
+      
+      /* Container */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #EAEAEA;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        transition: margin-left 0.3s ease;
+      }
+      
+      /* Header */
+      .header {
+        background-color: #11358B;
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .header h1 i {
+        font-size: 22px;
+      }
+      
+      .view-only-badge {
+        display: none; /* Hidden as requested */
+      }
+      
+      /* Content */
+      .content {
+        padding: 20px;
+        flex: 1;
+        transition: all 0.3s ease;
+      }
+      
+      /* Sections */
+      .section {
+        margin-bottom: 30px;
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+      
+      .section-header {
+        background-color: #573FD7;
+        padding: 15px 20px;
+        border-bottom: 1px solid #ddd;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .section-header h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      
+      .section-body {
+        padding: 20px;
+      }
+      
+      /* Forms */
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+      
+      .form-col {
+        flex: 1;
+        position: relative;
+      }
+
+      .form-col i {
+        position: absolute;
+        left: 10px; /* Keeps it towards the left */
+        top: 50%; /* Moves it to the middle vertically */
+        transform: translateY(-50%); /* Ensures perfect vertical centering */
+        color: #573FD7;
+      }
+
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #11358B;
+      }
+      
+      select, input[type="text"] {
+        width: 100%;
+        padding: 10px 10px 10px 35px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+      
+      select:focus, input[type="text"]:focus {
+        outline: none;
+        border-color: #573FD7;
+        box-shadow: 0 0 0 2px rgba(87, 63, 215, 0.2);
+      }
+      
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-primary {
+        background-color: #573FD7;
+        color: white;
+      }
+      
+      .btn-primary:hover {
+        background-color: #4930b8;
+        transform: translateY(-2px);
+      }
+      
+      .btn-danger {
+        background-color: #E48F24;
+        color: white;
+      }
+      
+      .btn-danger:hover {
+        background-color: #d17d18;
+      }
+      
+      .btn-edit {
+        background-color: #11358B;
+        color: white;
+      }
+      
+      .btn-edit:hover {
+        background-color: #0d2a70;
+      }
+      
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      
+      /* Table */
+      .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th, td {
+        padding: 14px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+      
+      th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #11358B;
+      }
+      
+      tr:hover {
+        background-color: #f8f8f8;
+      }
+      
+      .cell-actions {
+        display: flex;
+        gap: 5px;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+      
+      /* Notifications */
+      .notification {
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      .notification-success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+      }
+      
+      .notification-error {
+        background-color: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+      }
+      
+      .notification-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: inherit;
+      }
+      
+      /* Loading */
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        color: #573FD7;
+      }
+      
+      .loading-spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #573FD7;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(3px);
+      }
+      
+      .modal {
+        background-color: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: modalFadeIn 0.3s ease;
+      }
+      
+      @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .modal-header {
+        background-color: #573FD7;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .modal-title {
+        margin: 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      
+      .modal-close:hover {
+        transform: scale(1.1);
+      }
+      
+      .modal-body {
+        padding: 20px;
+      }
+      
+      .modal-footer {
+        padding: 15px 20px;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .form-row {
+          flex-direction: column;
+        }
+        
+        th, td {
+          padding: 10px;
+        }
+        
+        .cell-actions {
+          flex-direction: column;
+        }
+      }
+      
+      /* Utility Classes */
+      .hidden {
+        display: none;
+      }
+      
+      .text-center {
+        text-align: center;
+      }
+      
+      .mt-10 {
+        margin-top: 10px;
+      }
+      
+      .mb-10 {
+        margin-bottom: 10px;
+      }
+
+      /* Sidebar Styles */
+      .sidebar {
+        background-color: #1a1f2c;
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar.collapsed {
+        width: 70px;
+      }
+
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: #141824;
+        color: white;
+      }
+
+      .sidebar-logo {
+        width: 40px;
+        height: 40px;
+        background-color: #E48F24;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .sidebar-logo i {
+        font-size: 20px;
+      }
+
+      .sidebar-title {
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: opacity 0.3s ease, width 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-title {
+        opacity: 0;
+        width: 0;
+      }
+
+      .sidebar-menu {
+        padding: 20px 0;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
+
+      .sidebar-item {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin: 4px 8px;
+        border-radius: 8px;
+      }
+
+      .sidebar-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .sidebar-item i {
+        font-size: 18px;
+        min-width: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sidebar-item span {
+        margin-left: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: opacity 0.3s ease, width 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-item span {
+        opacity: 0;
+        width: 0;
+      }
+
+      .sidebar-toggle {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .sidebar-toggle:hover {
+        color: #fff;
+      }
+
+      .sidebar-toggle i {
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-toggle {
+        justify-content: center;
+      }
+
+      .sidebar.collapsed .sidebar-toggle i {
+        transform: rotate(180deg);
+      }
+
+      .sidebar-mobile-toggle {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #573FD7;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 99;
+      }
+
+      /* Main content adjustments for sidebar */
+      .main-wrapper {
+        display: flex;
+        width: 100%;
+      }
+
+      .main-content {
+        flex: 1;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+      }
+
+      .main-content.sidebar-collapsed {
+        margin-left: 70px;
+      }
+
+      /* Responsive adjustments for sidebar */
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+        
+        .sidebar.active {
+          transform: translateX(0);
+        }
+        
+        .sidebar-mobile-toggle {
+          display: flex;
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-wrapper">
+      <!-- Sidebar -->
+      <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <i class="fas fa-book-open-reader text-white"></i>
+          </div>
+          <div class="sidebar-title">Training System <br> (TS)</div>
+        </div>
+        <div class="sidebar-menu">
+          <a href="YOUR_DASHBOARD_DEPLOYMENT_LINK" class="sidebar-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="YOUR_TRAINEE_DATABASE_DEPLOYMENT_LINK" class="sidebar-item">
+            <i class="fas fa-users"></i>
+            <span>Trainee Database</span>
+          </a>
+          <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>Training Management</span>
+          </a>
+          <a href="YOUR_QUESTIONS_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+            <i class="fas fa-question-circle"></i>
+            <span>Questions Management</span>
+          </a>
+          <a  class="sidebar-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        </div>
+        <div id="sidebar-toggle" class="sidebar-toggle">
+          <i class="fas fa-chevron-left"></i>
+        </div>
+      </div>
+
+      <!-- Mobile sidebar toggle button -->
+      <div id="sidebar-mobile-toggle" class="sidebar-mobile-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+
+      <!-- Main Content -->
+      <div id="main-content" class="main-content">
+        <div class="container">
+          <div class="header">
+            <h1>
+              <i class="fas fa-cog fa-spin"></i>
+              Settings Manager
+              <? if (!hasEditAccess) { ?>
+                <span class="view-only-badge">View Only Mode</span>
+              <? } ?>
+            </h1>
+          </div>
+          
+          <div class="content">
+            <div id="notification" class="hidden"></div>
+            
+            <? if (hasEditAccess) { ?>
+            <div class="section">
+              <div class="section-header">
+                <i class="fas fa-plus-circle"></i>
+                <h2>Add New Setting</h2>
+              </div>
+              <div class="section-body">
+                <div class="form-row">
+                  <div class="form-col">
+                    <label for="settingType">Setting Type:</label>
+                    <select id="settingType">
+                      <option value="Healthcare Name">Healthcare Name</option>
+                      <option value="Device Serial Number">Device Serial Number</option>
+                      <option value="Area of Specialization">Area of Specialization</option>
+                      <option value="K-Laser Model">K-Laser Model</option>
+                    </select>
+                  </div>
+                  <div class="form-col">
+                    <label for="settingValue">Value:</label>
+                    <input type="text" id="settingValue" placeholder="Enter value">
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="addSetting()">
+                  <i class="fas fa-save"></i> Add Setting
+                </button>
+              </div>
+            </div>
+            <? } ?>
+            
+            <div class="section">
+              <div class="section-header">
+                <i class="fas fa-list-alt"></i>
+                <h2>Current Settings</h2>
+              </div>
+              <div class="section-body">
+                <div id="loading" class="loading">
+                  <div class="loading-spinner"></div>
+                  <span>Loading settings data...</span>
+                </div>
+                
+                <div class="table-container">
+                  <table id="settingsTable" class="hidden">
+                    <thead>
+                      <tr>
+                        <th><i class="fas fa-hospital me-2"></i> Healthcare Name</th>
+                        <th><i class="fas fa-barcode me-2"></i> Device Serial Number</th>
+                        <th><i class="fas fa-stethoscope me-2"></i> Area of Specialization</th>
+                        <th><i class="fas fa-laser me-2"></i> K-Laser Model</th>
+                        <? if (hasEditAccess) { ?>
+                        <th class="text-center"> </th>
+                        <? } ?>
+                      </tr>
+                    </thead>
+                    <tbody id="settingsData">
+                      <!-- Data will be inserted here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <? if (hasEditAccess) { ?>
+    <div id="editModal" class="modal-backdrop hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title" id="editModalTitle">
+            <i class="fas fa-edit"></i> Edit Setting
+          </h3>
+          <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="editValue">Value:</label>
+            <div class="form-col">
+              <i class="fas fa-pen"></i>
+              <input type="text" id="editValue" placeholder="Enter new value">
+            </div>
+            <input type="hidden" id="editRowIndex">
+            <input type="hidden" id="editColumnType">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="saveEdit()">
+            <i class="fas fa-check"></i> Save Changes
+          </button>
+          <button class="btn" onclick="closeEditModal()">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+    <? } ?>
+
+    <script>
+       
+      function hasEditSection() {
+        return document.querySelector('.section-header h2')?.textContent.includes('Add New Setting') || false;
+      }
+
+       
+      const hasEditAccess = <?= hasEditAccess ?> && hasEditSection();
+      
+       
+      document.addEventListener('DOMContentLoaded', function() {
+        loadSettingsData();
+        setupSidebar();
+      });
+      
+       
+      function loadSettingsData() {
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('settingsTable').classList.add('hidden');
+        
+        google.script.run
+          .withSuccessHandler(displaySettingsData)
+          .withFailureHandler(showError)
+          .getSettingsData();
+      }
+
+       
+      function setupSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
+        const toggleIcon = sidebarToggle.querySelector('i');
+        
+         
+        sidebarToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('collapsed');
+          mainContent.classList.toggle('sidebar-collapsed');
+          
+          if (sidebar.classList.contains('collapsed')) {
+            toggleIcon.classList.remove('fa-chevron-left');
+            toggleIcon.classList.add('fa-chevron-right');
+          } else {
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-chevron-left');
+          }
+        });
+        
+         
+        sidebarMobileToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('active');
+        });
+        
+         
+        document.addEventListener('click', function(event) {
+          const isMobile = window.innerWidth <= 992;
+          if (isMobile && 
+              !sidebar.contains(event.target) && 
+              !sidebarMobileToggle.contains(event.target) &&
+              sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+          }
+        });
+        
+         
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 992) {
+            sidebar.classList.remove('active');
+          }
+        });
+      }
+      
+       
+      function displaySettingsData(data) {
+        const tableBody = document.getElementById('settingsData');
+        const canEdit = hasEditSection();
+        
+         
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('settingsTable').classList.remove('hidden');
+        
+         
+        tableBody.innerHTML = '';
+        
+         
+        if (data.length === 0) {
+          const colSpan = canEdit ? 5 : 4;
+          tableBody.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center">No settings data found</td></tr>';
+        } else {
+          data.forEach(function(row) {
+            const tr = document.createElement('tr');
+            
+             
+            const tdHealthcare = document.createElement('td');
+            tdHealthcare.textContent = row.healthcareName || '';
+            if (canEdit && row.healthcareName) {
+              const actionDiv = createCellActionButtons(row.rowIndex, 'Healthcare Name', row.healthcareName);
+              tdHealthcare.appendChild(actionDiv);
+            }
+            tr.appendChild(tdHealthcare);
+            
+             
+            const tdDevice = document.createElement('td');
+            tdDevice.textContent = row.deviceSerialNumber || '';
+            if (canEdit && row.deviceSerialNumber) {
+              const actionDiv = createCellActionButtons(row.rowIndex, 'Device Serial Number', row.deviceSerialNumber);
+              tdDevice.appendChild(actionDiv);
+            }
+            tr.appendChild(tdDevice);
+            
+             
+            const tdArea = document.createElement('td');
+            tdArea.textContent = row.areaOfSpecialization || '';
+            if (canEdit && row.areaOfSpecialization) {
+              const actionDiv = createCellActionButtons(row.rowIndex, 'Area of Specialization', row.areaOfSpecialization);
+              tdArea.appendChild(actionDiv);
+            }
+            tr.appendChild(tdArea);
+            
+             
+            const tdModel = document.createElement('td');
+            tdModel.textContent = row.kLaserModel || '';
+            if (canEdit && row.kLaserModel) {
+              const actionDiv = createCellActionButtons(row.rowIndex, 'K-Laser Model', row.kLaserModel);
+              tdModel.appendChild(actionDiv);
+            }
+            tr.appendChild(tdModel);
+            
+             
+            if (canEdit) {
+              const tdActions = document.createElement('td');
+              tdActions.className = 'text-center';
+              tr.appendChild(tdActions);
+            }
+            
+            tableBody.appendChild(tr);
+          });
+        }
+      }
+      
+       
+      function createCellActionButtons(rowIndex, columnType, currentValue) {
+        const actionDiv = document.createElement('div');
+        actionDiv.className = 'cell-actions mt-10';
+        
+         
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-edit btn-sm';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit ' + columnType;  
+        editBtn.onclick = function(e) {
+          e.stopPropagation();
+          openEditModal(rowIndex, columnType, currentValue);
+        };
+        actionDiv.appendChild(editBtn);
+        
+         
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger btn-sm';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.title = 'Delete ' + columnType;  
+        deleteBtn.onclick = function(e) {
+          e.stopPropagation();
+          deleteSetting(rowIndex, columnType);
+        };
+        actionDiv.appendChild(deleteBtn);
+        
+        return actionDiv;
+      }
+      
+       
+      function openEditModal(rowIndex, columnType, currentValue) {
+        if (!hasEditSection()) return;
+        
+        document.getElementById('editModalTitle').textContent = 'Edit ' + columnType;
+        document.getElementById('editValue').value = currentValue;
+        document.getElementById('editRowIndex').value = rowIndex;
+        document.getElementById('editColumnType').value = columnType;
+        document.getElementById('editModal').classList.remove('hidden');
+      }
+      
+       
+      function closeEditModal() {
+        if (!hasEditSection()) return;
+        
+        document.getElementById('editModal').classList.add('hidden');
+      }
+      
+       
+      function saveEdit() {
+        if (!hasEditSection()) return;
+        
+        const rowIndex = document.getElementById('editRowIndex').value;
+        const columnType = document.getElementById('editColumnType').value;
+        const value = document.getElementById('editValue').value.trim();
+        
+        if (!value) {
+          showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
+          return;
+        }
+        
+         
+        closeEditModal();
+        
+         
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('settingsTable').classList.add('hidden');
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+            loadSettingsData();
+          })
+          .withFailureHandler(function(error) {
+            showError(error);
+            loadSettingsData();
+          })
+          .updateSetting(rowIndex, columnType, value);
+      }
+      
+       
+      function addSetting() {
+        if (!hasEditSection()) return;
+        
+        const type = document.getElementById('settingType').value;
+        const value = document.getElementById('settingValue').value.trim();
+        
+        if (!value) {
+          showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
+          return;
+        }
+        
+         
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('settingsTable').classList.add('hidden');
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+            document.getElementById('settingValue').value = '';
+            loadSettingsData();
+          })
+          .withFailureHandler(function(error) {
+            showError(error);
+            loadSettingsData();
+          })
+          .addSetting(type, value);
+      }
+      
+       
+      function deleteSetting(rowIndex, columnType) {
+        if (!hasEditSection()) return;
+        
+        if (!confirm('Are you sure you want to delete this ' + columnType + '?')) {
+          return;
+        }
+        
+         
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('settingsTable').classList.add('hidden');
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+            loadSettingsData();
+          })
+          .withFailureHandler(function(error) {
+            showError(error);
+            loadSettingsData();
+          })
+          .deleteSetting(rowIndex, columnType);
+      }
+      
+       
+      function showNotification(message, type) {
+        const notificationDiv = document.getElementById('notification');
+        
+         
+        notificationDiv.innerHTML = `
+          <div class="notification notification-${type}">
+            <span>${message}</span>
+            <button class="notification-close" onclick="closeNotification()"><i class="fas fa-times"></i></button>
+          </div>
+        `;
+        
+        notificationDiv.classList.remove('hidden');
+        
+         
+        setTimeout(function() {
+          closeNotification();
+        }, 5000);
+      }
+      
+       
+      function closeNotification() {
+        document.getElementById('notification').classList.add('hidden');
+      }
+      
+       
+      function showError(error) {
+        document.getElementById('loading').classList.add('hidden');
+        showNotification('<i class="fas fa-exclamation-circle"></i> Error: ' + error.message, 'error');
+      }
+    </script>
+  </body>
+</html>

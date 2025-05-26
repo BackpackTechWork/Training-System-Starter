@@ -1,0 +1,3108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    background: linear-gradient(to bottom right, #573FD5, #1f46a3);
+    color: #EAEAEA;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex; /* Added to support sidebar layout */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+  
+  /* Sidebar Styles */
+  .sidebar {
+    background-color: #1a1f2c;
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar.collapsed {
+    width: 70px;
+  }
+
+  .sidebar.hidden {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #141824;
+    color: white;
+  }
+
+  .sidebar-logo {
+    width: 40px;
+    height: 40px;
+    background-color: #E48F24;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo i {
+    font-size: 20px;
+  }
+
+  .sidebar-title {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.3s ease, width 0.3s ease;
+  }
+
+  .sidebar.collapsed .sidebar-title {
+    opacity: 0;
+    width: 0;
+  }
+
+  .sidebar-menu {
+    padding: 20px 0;
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  .sidebar-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin: 4px 8px;
+    border-radius: 8px;
+  }
+
+  .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .sidebar-item i {
+    font-size: 18px;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-item span {
+    margin-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.3s ease, width 0.3s ease;
+  }
+
+  .sidebar.collapsed .sidebar-item span {
+    opacity: 0;
+    width: 0;
+  }
+
+  .sidebar-toggle {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .sidebar-toggle:hover {
+    color: #fff;
+  }
+
+  .sidebar-toggle i {
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.collapsed .sidebar-toggle {
+    justify-content: center;
+  }
+
+  .sidebar-mobile-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #573FD7;
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 99;
+  }
+
+  /* Main Content Styles */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    margin-left: 250px; /* Match sidebar width */
+    width: calc(100% - 250px); /* Adjust width based on sidebar */
+  }
+
+    @media (min-width: 993px) {
+    .container {
+      margin-left: 270px; /* Slightly more space from sidebar */
+    }
+  }
+  
+  /* Adjust container when sidebar is collapsed */
+  .sidebar-collapsed .container {
+    margin-left: 70px; /* Match collapsed sidebar width */
+    width: calc(100% - 70px);
+  }
+  
+  /* Responsive adjustments for sidebar */
+  @media (max-width: 992px) {
+    .sidebar {
+      transform: translateX(-100%);
+      width: 280px; /* Slightly wider on mobile for better touch targets */
+    }
+    
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    
+    .sidebar-mobile-toggle {
+      display: flex;
+    }
+    
+    .container {
+      margin-left: 0;
+      width: 100%;
+      padding: 15px; /* Smaller padding on mobile */
+    }
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #EAEAEA;
+    font-weight: 700; /* Increased font weight to make it bolder */
+    letter-spacing: 0.5px;
+    font-size: 28px; /* Slightly larger font size */
+  }
+  
+  .search-container {
+    display: flex;
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+  
+  #searchInput {
+    flex: 1;
+    padding: 12px 15px 12px 45px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    background-color: rgba(234, 234, 234, 0.9);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  #searchInput:focus {
+    outline: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    background-color: #EAEAEA;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #573FD7;
+    font-size: 18px;
+  }
+  
+  .cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  
+  /* Adjust card grid for smaller screens */
+  @media (max-width: 768px) {
+    .cards-container {
+      grid-template-columns: 1fr; /* Single column on small screens */
+    }
+  }
+  
+  .card {
+    background-color: rgba(234, 234, 234, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    padding: 25px;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    color: #11358B;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: #573FD7;
+  }
+  
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Disable hover effect on touch devices */
+  @media (hover: none) {
+    .card:hover {
+      transform: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .card h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #11358B;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    word-break: break-word; /* Allow long names to wrap */
+  }
+  
+  .card h2 i {
+    margin-right: 10px;
+    color: #573FD7;
+    flex-shrink: 0;
+  }
+  
+  .card-info {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    word-break: break-word; /* Allow long text to wrap */
+  }
+  
+  .card-info i {
+    margin-right: 10px;
+    color: #573FD7;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 4px; /* Align icon with first line of text */
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    width: fit-content;
+  }
+  
+  .status-badge i {
+    margin-right: 6px;
+  }
+  
+  .status-active {
+    background-color: #573FD7;
+  }
+  
+  .status-inactive {
+    background-color: #E48F24;
+  }
+  
+  /* Modal Styles - Enhanced for mobile */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(17, 53, 139, 0.7);
+    overflow: auto;
+    backdrop-filter: blur(5px);
+  }
+  
+  .modal-content {
+    background-color: #EAEAEA;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+    color: #11358B;
+  }
+  
+  /* Adjust modal for mobile */
+  @media (max-width: 768px) {
+    .modal-content {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      padding: 20px 15px; /* Reduced horizontal padding */
+    }
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #573FD7;
+    cursor: pointer;
+    transition: color 0.2s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    z-index: 10; /* Ensure it's above other elements */
+  }
+  
+  .close-button:hover {
+    color: #E48F24;
+    background-color: rgba(87, 63, 215, 0.1);
+  }
+  
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 25px;
+  }
+  
+  @media (max-width: 768px) {
+    .detail-grid {
+      grid-template-columns: 1fr;
+      gap: 15px; /* Reduced gap on mobile */
+    }
+    
+    .modal-content {
+      width: 100%;
+      margin: 0;
+      padding: 20px 15px; /* Reduced horizontal padding */
+    }
+    
+    .close-button {
+      top: 15px;
+      right: 15px;
+    }
+  }
+  
+  .detail-item {
+    margin-bottom: 15px;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+    word-break: break-word; /* Allow long text to wrap */
+  }
+  
+  .detail-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Disable hover effect on touch devices */
+  @media (hover: none) {
+    .detail-item:hover {
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  .detail-label {
+    font-size: 14px;
+    color: #573FD7;
+    margin-bottom: 5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+  }
+  
+  .detail-label i {
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  
+  .detail-value {
+    font-size: 16px;
+    color: #11358B;
+    word-break: break-word;
+  }
+  
+  .modal-header {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(87, 63, 215, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative; /* For positioning the close button */
+    padding-right: 50px; /* Add space for the close button */
+  }
+  
+  /* Adjust modal header for mobile */
+  @media (max-width: 768px) {
+    .modal-header {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-right: 0;
+    }
+    
+    .modal-header .status-badge {
+      margin-top: 10px;
+    }
+  }
+  
+  .modal-title {
+    font-size: 26px;
+    color: #573FD7;
+    margin-bottom: 5px;
+    font-weight: 600;
+    word-break: break-word; /* Allow long titles to wrap */
+  }
+  
+  /* Adjust title size on mobile */
+  @media (max-width: 768px) {
+    .modal-title {
+      font-size: 22px;
+    }
+  }
+  
+  .modal-footer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(87, 63, 215, 0.2);
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  /* Adjust footer for mobile */
+  @media (max-width: 768px) {
+    .modal-footer {
+      flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn i {
+    margin-right: 8px;
+  }
+  
+  .btn-primary {
+    background-color: #573FD7;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #4933b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(87, 63, 215, 0.3);
+  }
+  
+  .btn-secondary {
+    background-color: #EAEAEA;
+    color: #11358B;
+    border: 1px solid #11358B;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #d8d8d8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(17, 53, 139, 0.2);
+  }
+  
+  .btn-danger {
+    background-color: #E48F24;
+    color: white;
+  }
+  
+  .btn-danger:hover {
+    background-color: #d17f1c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(228, 143, 36, 0.3);
+  }
+  
+  .btn-success {
+    background-color: #573FD7;
+    color: white;
+  }
+  
+  .btn-success:hover {
+    background-color: #4933b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(87, 63, 215, 0.3);
+  }
+  
+  /* Disable hover effects on touch devices */
+  @media (hover: none) {
+    .btn:hover {
+      transform: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary:hover {
+      background-color: #573FD7;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #EAEAEA;
+    }
+    
+    .btn-danger:hover {
+      background-color: #E48F24;
+    }
+    
+    .btn-success:hover {
+      background-color: #573FD7;
+    }
+  }
+  
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+  }
+  
+  .spinner {
+    border: 4px solid rgba(234, 234, 234, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #573FD7;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .no-results {
+    text-align: center;
+    padding: 60px 0;
+    color: #EAEAEA;
+    background-color: rgba(17, 53, 139, 0.2);
+    border-radius: 15px;
+    margin-top: 20px;
+  }
+  
+  .no-results i {
+    font-size: 40px;
+    margin-bottom: 15px;
+    color: #E48F24;
+  }
+  
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #573FD7;
+    display: flex;
+    align-items: center;
+  }
+  
+  .form-label i {
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid rgba(87, 63, 215, 0.3);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s;
+    background-color: white;
+    color: #11358B;
+  }
+  
+  /* Increase touch target size on mobile */
+  @media (max-width: 768px) {
+    .form-control {
+      padding: 14px 15px;
+      font-size: 16px; /* iOS minimum to prevent zoom */
+    }
+    
+    select.form-control {
+      height: 50px; /* Larger touch target for dropdowns */
+    }
+  }
+  
+  .form-control:focus {
+    border-color: #573FD7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(87, 63, 215, 0.2);
+  }
+  
+  .form-control[readonly] {
+    background-color: rgba(234, 234, 234, 0.5);
+    cursor: not-allowed;
+  }
+  
+  .form-error {
+    color: #E48F24;
+    font-size: 13px;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .form-error i {
+    margin-right: 5px;
+  }
+  
+  .multiselect-container {
+    position: relative;
+  }
+  
+  .multiselect-selected {
+    padding: 10px 15px;
+    border: 1px solid rgba(87, 63, 215, 0.3);
+    border-radius: 8px;
+    min-height: 45px;
+    cursor: pointer;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    background-color: white;
+    transition: all 0.3s;
+  }
+  
+  /* Increase touch target size on mobile */
+  @media (max-width: 768px) {
+    .multiselect-selected {
+      min-height: 50px;
+      padding: 12px 15px;
+    }
+  }
+  
+  .multiselect-selected:hover {
+    border-color: #573FD7;
+  }
+  
+  .multiselect-tag, .view-tag {
+    background-color: rgba(87, 63, 215, 0.1);
+    border-radius: 50px;
+    padding: 4px 12px;
+    margin: 2px;
+    display: inline-block;
+    font-size: 14px;
+    color: #573FD7;
+    font-weight: 500;
+    border: 1px solid rgba(87, 63, 215, 0.3);
+  }
+  
+  /* Increase touch target size on mobile */
+  @media (max-width: 768px) {
+    .multiselect-tag, .view-tag {
+      padding: 6px 14px;
+      margin: 3px;
+    }
+    
+    .multiselect-tag-remove {
+      padding: 0 5px;
+    }
+  }
+  
+  .view-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .multiselect-tag-remove {
+    margin-left: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #573FD7;
+  }
+  
+  .multiselect-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid rgba(87, 63, 215, 0.3);
+    border-radius: 8px;
+    z-index: 10;
+    display: none;
+    margin-top: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Increase dropdown height on mobile for better scrolling */
+  @media (max-width: 768px) {
+    .multiselect-dropdown {
+      max-height: 250px;
+    }
+  }
+  
+  .multiselect-option {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: #11358B;
+  }
+  
+  /* Increase touch target size on mobile */
+  @media (max-width: 768px) {
+    .multiselect-option {
+      padding: 14px 15px;
+    }
+  }
+  
+  .multiselect-option:hover {
+    background-color: rgba(87, 63, 215, 0.1);
+  }
+  
+  .multiselect-option.selected {
+    background-color: rgba(87, 63, 215, 0.2);
+    color: #573FD7;
+    font-weight: 500;
+  }
+  
+  .view-mode, .edit-mode {
+    display: none;
+  }
+  
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    display: none; /* Hide by default */
+    font-weight: 500;
+    align-items: center;
+  }
+  
+  /* Center toast on mobile */
+  @media (max-width: 768px) {
+    .toast {
+      left: 20px;
+      right: 20px;
+      justify-content: center;
+    }
+  }
+  
+  .toast i {
+    margin-right: 10px;
+    font-size: 18px;
+  }
+  
+  .toast-success {
+    background-color: #573FD7;
+    color: white;
+  }
+  
+  .toast-error {
+    background-color: #E48F24;
+    color: white;
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(234, 234, 234, 0.2);
+  }
+  
+  .title-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Move title slightly right only on desktop */
+  @media (min-width: 993px) {
+    .title-container h1 {
+      padding-left: 220px; /* adjust this value as needed */
+    }
+  }
+
+  /* Center the title properly on desktop */
+  @media (min-width: 993px) {
+    .title-container {
+      justify-content: center;
+      text-align: center;
+      margin-left: 0;
+      padding-left: 0;
+    }
+  }
+
+  /* Adjust header for mobile */
+  @media (max-width: 768px) {
+    .header-container {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .title-container {
+      justify-content: center;
+      padding-left: 0;
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .register-button {
+    background-color: #E48F24;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(228, 143, 36, 0.3);
+  }
+
+  /* Make button full width on mobile */
+  @media (max-width: 768px) {
+    .register-button {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 20px;
+    }
+  }
+
+  .register-button i {
+    margin-right: 8px;
+  }
+
+  .register-button:hover {
+    background-color: #d17f1c;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(228, 143, 36, 0.4);
+  }
+  
+  /* Disable hover effect on touch devices */
+  @media (hover: none) {
+    .register-button:hover {
+      transform: none;
+      box-shadow: 0 4px 15px rgba(228, 143, 36, 0.3);
+      background-color: #E48F24;
+    }
+  }
+  
+  .placeholder {
+    color: #999;
+    font-style: italic;
+  }
+
+  /* Custom Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #E48F24;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d17d1a;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #E48F24 rgba(255, 255, 255, 0.1);
+  }
+  
+  /* View Toggle Styles */
+  .view-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .view-toggle {
+    display: flex;
+    background-color: rgba(234, 234, 234, 0.2);
+    border-radius: 50px;
+    padding: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .view-toggle-btn {
+    padding: 8px 20px;
+    border-radius: 50px;
+    border: none;
+    background: none;
+    color: #EAEAEA;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .view-toggle-btn.active {
+    background-color: #573FD7;
+    color: white;
+    box-shadow: 0 2px 8px rgba(87, 63, 215, 0.3);
+  }
+  
+  /* Table View Styles */
+  .table-container {
+    background-color: rgba(234, 234, 234, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    margin-bottom: 20px;
+    display: none; /* Hidden by default */
+  }
+  
+  .trainee-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #11358B;
+  }
+  
+  .trainee-table th {
+    background-color: #573FD7;
+    color: white;
+    text-align: left;
+    padding: 15px;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+  }
+  
+  .trainee-table th .filter-icon {
+    margin-left: 5px;
+    font-size: 12px;
+  }
+  
+  .trainee-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(87, 63, 215, 0.1);
+  }
+  
+  .trainee-table tr {
+    transition: background-color 0.2s;
+    cursor: pointer;
+  }
+  
+  .trainee-table tr:hover {
+    background-color: rgba(87, 63, 215, 0.05);
+  }
+  
+  .trainee-table tr:nth-child(even) {
+    background-color: rgba(87, 63, 215, 0.03);
+  }
+  
+  .trainee-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .table-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+  }
+  
+  .table-status-active {
+    background-color: #573FD7;
+  }
+  
+  .table-status-inactive {
+    background-color: #E48F24;
+  }
+  
+  /* Column Filter Styles */
+  .column-filter {
+    position: absolute;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    z-index: 100;
+    min-width: 200px;
+    display: none;
+    margin-top: 5px;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+  }
+  
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(87, 63, 215, 0.1);
+  }
+  
+  .filter-title {
+    font-weight: 600;
+    color: #573FD7;
+    font-size: 14px;
+  }
+  
+  .filter-close {
+    cursor: pointer;
+    color: #11358B;
+    font-size: 16px;
+  }
+  
+  .filter-content {
+    margin-bottom: 15px;
+  }
+  
+  .filter-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .filter-input:focus {
+    outline: none;
+    border-color: #573FD7;
+    box-shadow: 0 0 0 2px rgba(87, 63, 215, 0.1);
+  }
+  
+  .filter-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    background-color: white;
+    color: #11358B;
+  }
+  
+  .filter-date-range {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .filter-date-range input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  
+  .filter-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .filter-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+  }
+  
+  .filter-apply {
+    background-color: #573FD7;
+    color: white;
+  }
+  
+  .filter-clear {
+    background-color: #EAEAEA;
+    color: #11358B;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+  }
+  
+  .filter-active {
+    position: relative;
+  }
+  
+  .filter-active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background-color: #E48F24;
+    border-radius: 50%;
+  }
+  
+  /* Responsive table */
+  @media (max-width: 992px) {
+    .trainee-table th:nth-child(4),
+    .trainee-table td:nth-child(4) {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .trainee-table th:nth-child(3),
+    .trainee-table td:nth-child(3) {
+      display: none;
+    }
+    
+    .trainee-table th,
+    .trainee-table td {
+      padding: 10px;
+    }
+    
+    .column-filter {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 300px;
+    }
+  }
+  
+  /* Pagination Styles */
+  .table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: rgba(234, 234, 234, 0.9);
+    border-top: 1px solid rgba(87, 63, 215, 0.1);
+  }
+  
+  .pagination-info {
+    color: #11358B;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pagination-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(87, 63, 215, 0.2);
+    background-color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #573FD7;
+  }
+  
+  .pagination-btn:hover:not(.disabled) {
+    background-color: rgba(87, 63, 215, 0.1);
+    border-color: #573FD7;
+  }
+  
+  .pagination-btn.active {
+    background-color: #573FD7;
+    color: white;
+    border-color: #573FD7;
+  }
+  
+  .pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #999;
+  }
+  
+  /* Responsive pagination */
+  @media (max-width: 768px) {
+    .table-pagination {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+  
+  /* Training History Styles - Enhanced for mobile */
+  .training-history-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  /* Adjust training history table for mobile */
+  @media (max-width: 768px) {
+    .training-history-table-container {
+      max-height: 400px; /* Taller on mobile for better scrolling */
+      margin-left: -10px;
+      margin-right: -10px;
+      width: calc(100% + 20px); /* Make it slightly wider than container */
+      border-radius: 6px;
+    }
+  }
+
+  .training-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #11358B;
+    background-color: white;
+    table-layout: fixed; /* Fixed layout for better mobile rendering */
+  }
+
+  .training-history-table th {
+    background-color: #573FD7;
+    color: white;
+    text-align: left;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 14px;
+  }
+
+  .training-history-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(87, 63, 215, 0.1);
+    word-break: break-word; /* Allow text to wrap */
+    font-size: 14px;
+  }
+
+  .training-history-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .training-history-table tr:nth-child(even) {
+    background-color: rgba(87, 63, 215, 0.03);
+  }
+
+  .grade-excellent {
+    color: #28a745;
+    font-weight: bold;
+  }
+
+  .grade-good {
+    color: #17a2b8;
+    font-weight: bold;
+  }
+
+  .grade-average {
+    color: #ffc107;
+    font-weight: bold;
+  }
+
+  .grade-poor {
+    color: #dc3545;
+    font-weight: bold;
+  }
+
+  .alert-message {
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: rgba(87, 63, 215, 0.1);
+    color: #573FD7;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .alert-message i {
+    margin-right: 10px;
+    font-size: 16px;
+  }
+
+  .alert-message.error {
+    background-color: rgba(228, 143, 36, 0.1);
+    color: #E48F24;
+  }
+
+  .loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* Responsive adjustments for training history table */
+  @media (max-width: 768px) {
+    .training-history-table th,
+    .training-history-table td {
+      padding: 8px 6px;
+      font-size: 13px;
+    }
+    
+    /* Adjust column widths on mobile */
+    .training-history-table th:nth-child(1),
+    .training-history-table td:nth-child(1) {
+      width: 25%; /* Training ID */
+    }
+    
+    .training-history-table th:nth-child(2),
+    .training-history-table td:nth-child(2) {
+      width: 20%; /* Date */
+    }
+    
+    .training-history-table th:nth-child(3),
+    .training-history-table td:nth-child(3) {
+      width: 30%; /* Training Type */
+    }
+    
+    .training-history-table th:nth-child(4),
+    .training-history-table td:nth-child(4) {
+      width: 15%; /* Grade */
+    }
+    
+    /* Hide less important columns on small screens */
+    .training-history-table th:nth-child(5),
+    .training-history-table td:nth-child(5),
+    .training-history-table th:nth-child(6),
+    .training-history-table td:nth-child(6) {
+      display: none;
+    }
+    
+    /* Make the view training history button full width on mobile */
+    #viewTrainingHistoryBtn, #closeHistoryBtn {
+      width: 100%;
+      margin-top: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<!-- Sidebar -->
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="fas fa-book-open-reader text-white"></i>
+    </div>
+    <div class="sidebar-title">Laser Training System <br> (LTS)</div>
+  </div>
+  <div class="sidebar-menu">
+    <a href="YOUR_DASHBOARD_DEPLOYMENT_LINK" class="sidebar-item">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a  class="sidebar-item">
+      <i class="fas fa-users"></i>
+      <span>Trainee Database</span>
+    </a>
+    <a href="YOUR_QUESTIONS_DEPLOYMENT_LINK" class="sidebar-item">
+      <i class="fas fa-chalkboard-teacher"></i>
+      <span>Training Management</span>
+    </a>
+    <a href="YOUR_SETTINGS_DEPLOYMENT_LINK" class="sidebar-item">
+      <i class="fas fa-question-circle"></i>
+      <span>Questions Management</span>
+    </a>
+    <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </a>
+  </div>
+  <div id="sidebar-toggle" class="sidebar-toggle">
+    <i class="fas fa-chevron-left"></i>
+  </div>
+</div>
+
+<!-- Mobile sidebar toggle button -->
+<div id="sidebar-mobile-toggle" class="sidebar-mobile-toggle">
+  <i class="fas fa-bars"></i>
+</div>
+
+<!-- Main Content -->
+<div id="main-content" class="container">
+  <div class="header-container">
+    <div class="title-container">
+      <h1><i class="fa-solid fa-book-open-reader"></i> <strong>Trainee Database</strong></h1>
+    </div>
+    <a href="YOUR_REGISTRATION_FORM_LINK" target="_blank" class="register-button">
+      <i class="fas fa-user-plus"></i> Register a Trainee
+    </a>
+  </div>
+  
+  <div class="search-container">
+    <i class="fas fa-search search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search by name, ID, IC/Passport, healthcare or status (active/inactive/empty)...">
+  </div>
+  
+  <!-- View Toggle -->
+  <div class="view-toggle-container">
+    <div class="view-toggle">
+      <button id="cardViewBtn" class="view-toggle-btn active">
+        <i class="fas fa-th-large"></i> Card View
+      </button>
+      <button id="tableViewBtn" class="view-toggle-btn">
+        <i class="fas fa-table"></i> Table View
+      </button>
+    </div>
+  </div>
+  
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading trainee data...</p>
+  </div>
+  
+  <!-- Table View Container -->
+  <div id="tableContainer" class="table-container" style="display: none;">
+    <table class="trainee-table">
+      <thead>
+        <tr>
+          <th data-column="name">Name <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="traineeId">ID <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="icPassport">IC/Passport <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="healthcareCentre">Healthcare <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="latestTraining">Latest Training <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="recertificationDate">Re-certification <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="completedTrainings">Completed <i class="fas fa-filter filter-icon"></i></th>
+          <th data-column="status">Status <i class="fas fa-filter filter-icon"></i></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <!-- Pagination for Table -->
+    <div class="table-pagination">
+      <div class="pagination-info" id="paginationInfo">
+        Showing 1-50 of 100 trainees
+      </div>
+      <div class="pagination-controls" id="paginationControls">
+        <!-- Pagination buttons will be inserted here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Column Filters -->
+  <div id="nameFilter" class="column-filter" data-column="name">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Name</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <input type="text" class="filter-input" placeholder="Search names...">
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="traineeIdFilter" class="column-filter" data-column="traineeId">
+    <div class="filter-header">
+      <div class="filter-title">Filter by ID</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <input type="text" class="filter-input" placeholder="Search IDs...">
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="icPassportFilter" class="column-filter" data-column="icPassport">
+    <div class="filter-header">
+      <div class="filter-title">Filter by IC/Passport</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <input type="text" class="filter-input" placeholder="Search IC/Passport...">
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="healthcareCentreFilter" class="column-filter" data-column="healthcareCentre">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Healthcare</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <select class="filter-select">
+        <option value="">All Healthcare Centres</option>
+        <!-- Options will be populated dynamically -->
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="latestTrainingFilter" class="column-filter" data-column="latestTraining">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Latest Training</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <div class="filter-date-range">
+        <input type="date" class="filter-date-from" placeholder="From">
+        <input type="date" class="filter-date-to" placeholder="To">
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="recertificationDateFilter" class="column-filter" data-column="recertificationDate">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Re-certification</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <div class="filter-date-range">
+        <input type="date" class="filter-date-from" placeholder="From">
+        <input type="date" class="filter-date-to" placeholder="To">
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="completedTrainingsFilter" class="column-filter" data-column="completedTrainings">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Completed Trainings</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <div class="filter-date-range">
+        <input type="number" class="filter-number-from" placeholder="Min" min="0">
+        <input type="number" class="filter-number-to" placeholder="Max" min="0">
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <div id="statusFilter" class="column-filter" data-column="status">
+    <div class="filter-header">
+      <div class="filter-title">Filter by Status</div>
+      <div class="filter-close"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="filter-content">
+      <select class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="empty">Empty</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-btn filter-apply">Apply</button>
+      <button class="filter-btn filter-clear">Clear</button>
+    </div>
+  </div>
+  
+  <!-- Card View Container -->
+  <div id="cardsContainer" class="cards-container"></div>
+  
+  <div id="noResults" class="no-results" style="display: none;">
+    <i class="fas fa-search"></i>
+    <p>No trainees found matching your search criteria.</p>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="traineeModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button"><i class="fas fa-times"></i></span>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<script>
+  // Global variables
+  let allTrainees = [];
+  let filteredTrainees = [];
+  let dropdownOptions = {
+    healthcareCentres: [],
+    deviceSerials: [],
+    specializations: []
+  };
+  let currentTrainee = null;
+  let currentView = 'card'; // Default view is card view
+  
+  // Pagination configuration
+  const ROWS_PER_PAGE = 50; // Constant as requested
+  let currentPage = 1;
+  
+  // Filter state
+  let activeFilters = {};
+  let currentOpenFilter = null;
+  
+  // DOM elements
+  const searchInput = document.getElementById('searchInput');
+  const cardsContainer = document.getElementById('cardsContainer');
+  const tableContainer = document.getElementById('tableContainer');
+  const tableBody = document.getElementById('tableBody');
+  const traineeModal = document.getElementById('traineeModal');
+  const closeButton = document.querySelector('.close-button');
+  const modalContent = document.getElementById('modalContent');
+  const loadingElement = document.getElementById('loading');
+  const noResultsElement = document.getElementById('noResults');
+  const toastElement = document.getElementById('toast');
+  const cardViewBtn = document.getElementById('cardViewBtn');
+  const tableViewBtn = document.getElementById('tableViewBtn');
+  const paginationInfo = document.getElementById('paginationInfo');
+  const paginationControls = document.getElementById('paginationControls');
+  
+  // Initialize the app
+  function init() {
+    // Set up sidebar functionality
+    setupSidebar();
+    
+    // Set up view toggle
+    setupViewToggle();
+    
+    // Set up column filters
+    setupColumnFilters();
+    
+    // Fetch trainee data and dropdown options from the server
+    Promise.all([
+      new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .getTraineeData();
+      }),
+      new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .getDropdownOptions();
+      })
+    ]).then(([traineeData, options]) => {
+      handleTraineeData(traineeData);
+      handleDropdownOptions(options);
+    }).catch(error => {
+      handleError(error);
+    });
+    
+    // Add event listeners
+    searchInput.addEventListener('input', handleSearch);
+    
+    closeButton.addEventListener('click', closeModal);
+    window.addEventListener('click', function(event) {
+      if (event.target === traineeModal) {
+        closeModal();
+      }
+    });
+  }
+  
+  // Setup view toggle functionality
+function setupViewToggle() {
+  cardViewBtn.addEventListener('click', function() {
+    if (currentView !== 'card') {
+      currentView = 'card';
+      cardViewBtn.classList.add('active');
+      tableViewBtn.classList.remove('active');
+      cardsContainer.style.display = 'grid';
+      tableContainer.style.display = 'none';
+    }
+  });
+
+  tableViewBtn.addEventListener('click', function() {
+    if (currentView !== 'table') {
+      currentView = 'table';
+      tableViewBtn.classList.add('active');
+      cardViewBtn.classList.remove('active');
+      tableContainer.style.display = 'block';
+      cardsContainer.style.display = 'none';
+    }
+  });
+}
+
+  
+  // Setup column filters
+  function setupColumnFilters() {
+    // Add click event to filter icons
+    document.querySelectorAll('.trainee-table th').forEach(th => {
+      const column = th.dataset.column;
+      if (!column) return;
+      
+      th.addEventListener('click', function(e) {
+        // Only trigger if clicking on the filter icon
+        if (e.target.classList.contains('filter-icon') || e.target.parentElement.classList.contains('filter-icon')) {
+          toggleColumnFilter(column);
+          e.stopPropagation();
+        }
+      });
+    });
+    
+    // Add event listeners to filter close buttons
+    document.querySelectorAll('.filter-close').forEach(closeBtn => {
+      closeBtn.addEventListener('click', function() {
+        const filter = this.closest('.column-filter');
+        filter.style.display = 'none';
+        currentOpenFilter = null;
+      });
+    });
+    
+    // Add event listeners to filter apply buttons
+    document.querySelectorAll('.filter-apply').forEach(applyBtn => {
+      applyBtn.addEventListener('click', function() {
+        const filter = this.closest('.column-filter');
+        const column = filter.dataset.column;
+        
+        applyColumnFilter(column);
+        filter.style.display = 'none';
+        currentOpenFilter = null;
+      });
+    });
+    
+    // Add event listeners to filter clear buttons
+    document.querySelectorAll('.filter-clear').forEach(clearBtn => {
+      clearBtn.addEventListener('click', function() {
+        const filter = this.closest('.column-filter');
+        const column = filter.dataset.column;
+        
+        clearColumnFilter(column);
+        filter.style.display = 'none';
+        currentOpenFilter = null;
+      });
+    });
+    
+    // Close filter when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.column-filter') && !e.target.classList.contains('filter-icon') && 
+          !e.target.parentElement.classList.contains('filter-icon')) {
+        document.querySelectorAll('.column-filter').forEach(filter => {
+          filter.style.display = 'none';
+        });
+        currentOpenFilter = null;
+      }
+    });
+  }
+  
+  // Toggle column filter display
+  function toggleColumnFilter(column) {
+    const filterId = `${column}Filter`;
+    const filterElement = document.getElementById(filterId);
+    
+    if (!filterElement) return;
+    
+    // Close any open filter
+    if (currentOpenFilter && currentOpenFilter !== filterId) {
+      document.getElementById(currentOpenFilter).style.display = 'none';
+    }
+    
+    // Toggle current filter
+    if (filterElement.style.display === 'block') {
+      filterElement.style.display = 'none';
+      currentOpenFilter = null;
+    } else {
+      // Position the filter below the column header
+      const th = document.querySelector(`.trainee-table th[data-column="${column}"]`);
+      const rect = th.getBoundingClientRect();
+      
+      filterElement.style.top = `${rect.bottom + window.scrollY}px`;
+      filterElement.style.left = `${rect.left + window.scrollX}px`;
+      
+      // Show the filter
+      filterElement.style.display = 'block';
+      currentOpenFilter = filterId;
+      
+      // Focus the input if it exists
+      const input = filterElement.querySelector('.filter-input, .filter-select, .filter-date-from');
+      if (input) input.focus();
+    }
+  }
+  
+  // Apply column filter
+  function applyColumnFilter(column) {
+    const filterId = `${column}Filter`;
+    const filterElement = document.getElementById(filterId);
+    
+    if (!filterElement) return;
+    
+    let filterValue;
+    
+    // Get filter value based on filter type
+    if (column === 'latestTraining' || column === 'recertificationDate') {
+      // Date range filter
+      const fromDate = filterElement.querySelector('.filter-date-from').value;
+      const toDate = filterElement.querySelector('.filter-date-to').value;
+      
+      if (fromDate || toDate) {
+        filterValue = {
+          from: fromDate ? new Date(fromDate) : null,
+          to: toDate ? new Date(toDate) : null
+        };
+      } else {
+        filterValue = null;
+      }
+    } else if (column === 'completedTrainings') {
+      // Number range filter
+      const fromNumber = filterElement.querySelector('.filter-number-from').value;
+      const toNumber = filterElement.querySelector('.filter-number-to').value;
+      
+      if (fromNumber || toNumber) {
+        filterValue = {
+          from: fromNumber ? parseInt(fromNumber) : null,
+          to: toNumber ? parseInt(toNumber) : null
+        };
+      } else {
+        filterValue = null;
+      }
+    } else if (column === 'healthcareCentre' || column === 'status') {
+      // Select dropdown filter
+      const select = filterElement.querySelector('.filter-select');
+      filterValue = select.value || null;
+    } else {
+      // Text input filter
+      const input = filterElement.querySelector('.filter-input');
+      filterValue = input.value.trim() || null;
+    }
+    
+    // Update active filters
+    if (filterValue) {
+      activeFilters[column] = filterValue;
+      
+      // Mark the column header as filtered
+      const th = document.querySelector(`.trainee-table th[data-column="${column}"]`);
+      th.classList.add('filter-active');
+    } else {
+      delete activeFilters[column];
+      
+      // Remove the filtered mark
+      const th = document.querySelector(`.trainee-table th[data-column="${column}"]`);
+      th.classList.remove('filter-active');
+    }
+    
+    // Apply all filters
+    applyFilters();
+  }
+  
+  // Clear column filter
+  function clearColumnFilter(column) {
+    const filterId = `${column}Filter`;
+    const filterElement = document.getElementById(filterId);
+    
+    if (!filterElement) return;
+    
+    // Clear inputs based on filter type
+    if (column === 'latestTraining' || column === 'recertificationDate') {
+      filterElement.querySelector('.filter-date-from').value = '';
+      filterElement.querySelector('.filter-date-to').value = '';
+    } else if (column === 'completedTrainings') {
+      filterElement.querySelector('.filter-number-from').value = '';
+      filterElement.querySelector('.filter-number-to').value = '';
+    } else if (column === 'healthcareCentre' || column === 'status') {
+      filterElement.querySelector('.filter-select').value = '';
+    } else {
+      filterElement.querySelector('.filter-input').value = '';
+    }
+    
+    // Remove from active filters
+    delete activeFilters[column];
+    
+    // Remove the filtered mark
+    const th = document.querySelector(`.trainee-table th[data-column="${column}"]`);
+    th.classList.remove('filter-active');
+    
+    // Apply all filters
+    applyFilters();
+  }
+  
+  // Apply all active filters
+  function applyFilters() {
+    // Start with search results
+    let results = [...allTrainees];
+    
+    // Apply search filter first
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+      results = results.filter(trainee => {
+        const nameMatch = trainee.name?.toString().toLowerCase().includes(searchTerm);
+        const idMatch = trainee.traineeId?.toString().toLowerCase().includes(searchTerm);
+        const icMatch = trainee.icPassport?.toString().toLowerCase().includes(searchTerm);
+        const centreMatch = trainee.healthcareCentre?.toString().toLowerCase().includes(searchTerm);
+
+        let statusMatch = false;
+        const status = trainee.status?.toString().toLowerCase().trim() || '';
+
+        if (['emp', 'empt', 'empty'].some(prefix => searchTerm.startsWith(prefix))) {
+          statusMatch = status === '';
+        } else {
+          statusMatch = status.startsWith(searchTerm);
+        }
+
+        return nameMatch || idMatch || icMatch || centreMatch || statusMatch;
+      });
+    }
+    
+    // Apply column filters
+    Object.keys(activeFilters).forEach(column => {
+      const filterValue = activeFilters[column];
+      
+      results = results.filter(trainee => {
+        if (!trainee[column] && trainee[column] !== 0) {
+          return false;
+        }
+        
+        if (column === 'latestTraining' || column === 'recertificationDate') {
+          // Date range filter
+          if (!trainee[column]) return false;
+          
+          const traineeDate = new Date(trainee[column]);
+          
+          if (filterValue.from && filterValue.to) {
+            return traineeDate >= filterValue.from && traineeDate <= filterValue.to;
+          } else if (filterValue.from) {
+            return traineeDate >= filterValue.from;
+          } else if (filterValue.to) {
+            return traineeDate <= filterValue.to;
+          }
+          
+          return true;
+        } else if (column === 'completedTrainings') {
+          // Number range filter
+          const traineeValue = parseInt(trainee[column]) || 0;
+          
+          if (filterValue.from !== null && filterValue.to !== null) {
+            return traineeValue >= filterValue.from && traineeValue <= filterValue.to;
+          } else if (filterValue.from !== null) {
+            return traineeValue >= filterValue.from;
+          } else if (filterValue.to !== null) {
+            return traineeValue <= filterValue.to;
+          }
+          
+          return true;
+        } else if (column === 'status' && filterValue === 'empty') {
+          // Special case for empty status
+          return !trainee[column] || trainee[column].toString().trim() === '';
+        } else {
+          // Text or select filter
+          return trainee[column].toString().toLowerCase().includes(filterValue.toLowerCase());
+        }
+      });
+    });
+    
+    // Update filtered trainees
+    filteredTrainees = results;
+    
+    // Reset to first page
+    currentPage = 1;
+    
+    // Render the results
+    renderTraineeCards(filteredTrainees);
+    renderTraineeTable(filteredTrainees);
+    updatePagination();
+  }
+  
+  // Handle trainee data received from server
+  function handleTraineeData(data) {
+    loadingElement.style.display = 'none';
+
+    // Ensure data is parsed if it's a JSON string
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data); // Convert JSON string to JavaScript object
+      } catch (error) {
+        console.error("Error parsing trainee data:", error);
+        return; // Stop execution if parsing fails
+      }
+    }
+
+    allTrainees = data;
+    filteredTrainees = [...allTrainees];
+    renderTraineeCards(filteredTrainees);
+    renderTraineeTable(filteredTrainees);
+    updatePagination();
+  }
+  
+  // Handle dropdown options received from server
+  function handleDropdownOptions(data) {
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data);
+      } catch (error) {
+        console.error("Error parsing dropdown options:", error);
+        return;
+      }
+    }
+    
+    dropdownOptions = data;
+    
+    // Populate healthcare centre filter dropdown
+    const healthcareSelect = document.querySelector('#healthcareCentreFilter .filter-select');
+    if (healthcareSelect) {
+      // Clear existing options except the first one
+      while (healthcareSelect.options.length > 1) {
+        healthcareSelect.remove(1);
+      }
+      
+      // Add options from the dropdown data
+      dropdownOptions.healthcareCentres.forEach(centre => {
+        const option = document.createElement('option');
+        option.value = centre;
+        option.textContent = centre;
+        healthcareSelect.appendChild(option);
+      });
+    }
+  }
+
+  // Setup sidebar functionality
+  function setupSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
+    const toggleIcon = sidebarToggle.querySelector('i');
+    
+    // Toggle sidebar collapse state
+    sidebarToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        // Update icon when collapsed
+        toggleIcon.classList.remove('fa-chevron-left');
+        toggleIcon.classList.add('fa-chevron-right');
+        document.body.classList.add('sidebar-collapsed');
+      } else {
+        // Update icon when expanded
+        toggleIcon.classList.remove('fa-chevron-right');
+        toggleIcon.classList.add('fa-chevron-left');
+        document.body.classList.remove('sidebar-collapsed');
+      }
+    });
+    
+    // Mobile sidebar toggle
+    sidebarMobileToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('active');
+    });
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+      const isMobile = window.innerWidth <= 992;
+      if (isMobile && 
+          !sidebar.contains(event.target) && 
+          !sidebarMobileToggle.contains(event.target) &&
+          sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+      }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 992) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
+  
+  // Handle errors
+  function handleError(error) {
+    loadingElement.style.display = 'none';
+    console.error('Error fetching data:', error);
+    cardsContainer.innerHTML = `
+      <div style="text-align: center; color: #EAEAEA; padding: 40px; background-color: rgba(17, 53, 139, 0.2); border-radius: 15px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: #E48F24; margin-bottom: 15px;"></i>
+        <p>Error loading data. Please try refreshing the page.</p>
+      </div>
+    `;
+  }
+  
+function handleSearch() {
+  const searchTerm = searchInput.value.toLowerCase().trim();
+
+  // Apply all filters (search is handled inside applyFilters)
+  applyFilters();
+}
+
+  // Render trainee cards
+  function renderTraineeCards(trainees) {
+    cardsContainer.innerHTML = '';
+    
+    if (trainees.length === 0) {
+      noResultsElement.style.display = 'block';
+      return;
+    }
+    
+    noResultsElement.style.display = 'none';
+    
+    trainees.forEach((trainee, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = index;
+      
+      const statusClass = trainee.status && trainee.status.toString().toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+      const statusIcon = statusClass === 'status-active' ? 'fa-check-circle' : 'fa-times-circle';
+      
+      card.innerHTML = `
+        <h2><i class="fas fa-user-md"></i>${escapeHtml(trainee.name)}</h2>
+        <div class="card-info"><i class="fas fa-id-card"></i><strong>ID:</strong> ${escapeHtml(trainee.traineeId)}</div>
+        <div class="card-info"><i class="fas fa-passport"></i><strong>IC/Passport:</strong> ${escapeHtml(trainee.icPassport)}</div>
+        <div class="card-info"><i class="fas fa-hospital"></i><strong>Healthcare:</strong> ${escapeHtml(trainee.healthcareCentre) || 'N/A'}</div>
+        <div class="card-info"><i class="fas fa-calendar-check"></i><strong>Latest Training:</strong> ${formatDate(trainee.latestTraining)}</div>
+        <div class="card-info"><i class="fas fa-calendar-plus"></i><strong>Re-certification:</strong> ${formatDate(trainee.recertificationDate)}</div>
+        <div class="card-info"><i class="fas fa-award"></i><strong>Completed Trainings:</strong> ${escapeHtml(trainee.completedTrainings) || '0'}</div>
+        <div class="status-badge ${statusClass}"><i class="fas ${statusIcon}"></i>${escapeHtml(trainee.status)}</div>
+      `;
+      
+      card.addEventListener('click', function() {
+        openModal(trainee);
+      });
+      
+      cardsContainer.appendChild(card);
+    });
+  }
+  
+  // Render trainee table with pagination
+  function renderTraineeTable(trainees) {
+    tableBody.innerHTML = '';
+    
+    if (trainees.length === 0) {
+      noResultsElement.style.display = 'block';
+      return;
+    }
+    
+    noResultsElement.style.display = 'none';
+    
+    // Calculate the current page data
+    const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ROWS_PER_PAGE, trainees.length);
+    const currentPageData = trainees.slice(startIndex, endIndex);
+    
+    currentPageData.forEach((trainee, index) => {
+      const row = document.createElement('tr');
+      row.dataset.index = startIndex + index; // Store the actual index in the filtered array
+      
+      const statusClass = trainee.status && trainee.status.toString().toLowerCase() === 'active' ? 'table-status-active' : 'table-status-inactive';
+      
+      row.innerHTML = `
+        <td>${escapeHtml(trainee.name)}</td>
+        <td>${escapeHtml(trainee.traineeId)}</td>
+        <td>${escapeHtml(trainee.icPassport)}</td>
+        <td>${escapeHtml(trainee.healthcareCentre) || 'N/A'}</td>
+        <td>${formatDate(trainee.latestTraining)}</td>
+        <td>${formatDate(trainee.recertificationDate)}</td>
+        <td>${escapeHtml(trainee.completedTrainings) || '0'}</td>
+        <td><span class="table-status ${statusClass}">${escapeHtml(trainee.status)}</span></td>
+      `;
+      
+      row.addEventListener('click', function() {
+        openModal(trainee);
+      });
+      
+      tableBody.appendChild(row);
+    });
+  }
+  
+  // Update pagination UI
+  function updatePagination() {
+    // Calculate total pages
+    const totalPages = Math.ceil(filteredTrainees.length / ROWS_PER_PAGE);
+    
+    // Update pagination info text
+    const startIndex = (currentPage - 1) * ROWS_PER_PAGE + 1;
+    const endIndex = Math.min(currentPage * ROWS_PER_PAGE, filteredTrainees.length);
+    paginationInfo.textContent = `Showing ${startIndex}-${endIndex} of ${filteredTrainees.length} trainees`;
+    
+    // Generate pagination controls
+    paginationControls.innerHTML = '';
+    
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.className = `pagination-btn ${currentPage === 1 ? 'disabled' : ''}`;
+    prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTraineeTable(filteredTrainees);
+        updatePagination();
+      }
+    });
+    paginationControls.appendChild(prevButton);
+    
+    // Page number buttons
+    const maxButtons = 5; // Maximum number of page buttons to show
+    const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    // Add first page button if not already in range
+    if (startPage > 1) {
+      const firstPageBtn = document.createElement('button');
+      firstPageBtn.className = 'pagination-btn';
+      firstPageBtn.textContent = '1';
+      firstPageBtn.addEventListener('click', () => {
+        currentPage = 1;
+        renderTraineeTable(filteredTrainees);
+        updatePagination();
+      });
+      paginationControls.appendChild(firstPageBtn);
+      
+      // Add ellipsis if needed
+      if (startPage > 2) {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'pagination-btn disabled';
+        ellipsis.textContent = '...';
+        paginationControls.appendChild(ellipsis);
+      }
+    }
+    
+    // Add page buttons
+    for (let i = startPage; i <= endPage; i++) {
+      const pageBtn = document.createElement('button');
+      pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+      pageBtn.textContent = i.toString();
+      pageBtn.addEventListener('click', () => {
+        currentPage = i;
+        renderTraineeTable(filteredTrainees);
+        updatePagination();
+      });
+      paginationControls.appendChild(pageBtn);
+    }
+    
+    // Add last page button if not already in range
+    if (endPage < totalPages) {
+      // Add ellipsis if needed
+      if (endPage < totalPages - 1) {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'pagination-btn disabled';
+        ellipsis.textContent = '...';
+        paginationControls.appendChild(ellipsis);
+      }
+      
+      const lastPageBtn = document.createElement('button');
+      lastPageBtn.className = 'pagination-btn';
+      lastPageBtn.textContent = totalPages.toString();
+      lastPageBtn.addEventListener('click', () => {
+        currentPage = totalPages;
+        renderTraineeTable(filteredTrainees);
+        updatePagination();
+      });
+      paginationControls.appendChild(lastPageBtn);
+    }
+    
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.className = `pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTraineeTable(filteredTrainees);
+        updatePagination();
+      }
+    });
+    paginationControls.appendChild(nextButton);
+  }
+  
+  // Create tags HTML for view mode
+  function createTagsHtml(valuesString) {
+    if (!valuesString) return '<div class="detail-value">N/A</div>';
+    
+    const values = valuesString.toString().split(',').map(val => val.trim()).filter(val => val);
+    
+    if (values.length === 0) return '<div class="detail-value">N/A</div>';
+    
+    let tagsHtml = '<div class="view-tags">';
+    values.forEach(value => {
+      tagsHtml += `<span class="view-tag">${escapeHtml(value)}</span>`;
+    });
+    tagsHtml += '</div>';
+    
+    return tagsHtml;
+  }
+  
+  // Open modal with trainee details
+  function openModal(trainee) {
+    currentTrainee = trainee;
+    const statusClass = trainee.status && trainee.status.toString().toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+    const statusIcon = statusClass === 'status-active' ? 'fa-check-circle' : 'fa-times-circle';
+    
+    modalContent.innerHTML = `
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fas fa-user-md"></i> ${escapeHtml(trainee.name)}</h2>
+        <div>
+          <div class="status-badge ${statusClass}"><i class="fas ${statusIcon}"></i>${escapeHtml(trainee.status)}</div>
+        </div>
+      </div>
+      
+      <!-- View Mode -->
+      <div id="viewMode" class="view-mode">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-passport"></i>IC/Passport</div>
+            <div class="detail-value">${escapeHtml(trainee.icPassport) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-id-card"></i>Trainee ID</div>
+            <div class="detail-value">${escapeHtml(trainee.traineeId) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-envelope"></i>Email</div>
+            <div class="detail-value">${escapeHtml(trainee.email) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-phone"></i>Handphone</div>
+            <div class="detail-value">${escapeHtml(trainee.handphone) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-hospital"></i>Healthcare Centre</div>
+            <div class="detail-value">${escapeHtml(trainee.healthcareCentre) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-user-tag"></i>Designation</div>
+            <div class="detail-value">${escapeHtml(trainee.designation) || 'N/A'}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-stethoscope"></i>Area of Specialization</div>
+            ${createTagsHtml(trainee.specialization)}
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-barcode"></i>Device Serial Number</div>
+            ${createTagsHtml(trainee.deviceSerialNumber)}
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-calendar-alt"></i>First Training</div>
+            <div class="detail-value">${formatDate(trainee.firstTraining)}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-calendar-check"></i>Latest Training</div>
+            <div class="detail-value">${formatDate(trainee.latestTraining)}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-calendar-plus"></i>Re-certification Date</div>
+            <div class="detail-value">${formatDate(trainee.recertificationDate)}</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-award"></i>Completed Trainings</div>
+            <div class="detail-value">${escapeHtml(trainee.completedTrainings) || '0'}</div>
+          </div>
+          
+          <!-- Training History Section in Modal -->
+          <div class="detail-item" style="grid-column: span 2;">
+            <div class="detail-label"><i class="fas fa-history"></i>Training History</div>
+            <div class="detail-value">
+              <button id="viewTrainingHistoryBtn" class="btn btn-primary" style="margin-top: 10px;">
+                <i class="fas fa-eye"></i> View Training History
+              </button>
+              <div id="trainingHistoryContent" style="display: none; margin-top: 15px;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button id="editButton" class="btn btn-primary"><i class="fas fa-edit"></i>Edit</button>
+          <button id="closeViewButton" class="btn btn-secondary"><i class="fas fa-times"></i>Close</button>
+        </div>
+      </div>
+      
+      <!-- Edit Mode -->
+      <div id="editMode" class="edit-mode">
+        <form id="editForm">
+          <div class="detail-grid">
+            <div class="form-group">
+              <label class="form-label" for="name"><i class="fas fa-user-md"></i>Trainee Name</label>
+              <input type="text" id="name" class="form-control" value="${escapeHtml(trainee.name)}" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="icPassport"><i class="fas fa-passport"></i>IC/Passport</label>
+              <input type="text" id="icPassport" class="form-control" value="${escapeHtml(trainee.icPassport)}">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="traineeId"><i class="fas fa-id-card"></i>Trainee ID</label>
+              <input type="text" id="traineeId" class="form-control" value="${escapeHtml(trainee.traineeId)}" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="email"><i class="fas fa-envelope"></i>Email</label>
+              <input type="email" id="email" class="form-control" value="${escapeHtml(trainee.email)}">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="handphone"><i class="fas fa-phone"></i>Handphone Number</label>
+              <input type="text" id="handphone" class="form-control" value="${escapeHtml(trainee.handphone)}" pattern="[0-9+\\-\\s]+" title="Only numbers, +, and - are allowed">
+              <div id="handphoneError" class="form-error"></div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="healthcareCentre"><i class="fas fa-hospital"></i>Healthcare Centre</label>
+              <select id="healthcareCentre" class="form-control">
+                <option value="">Select Healthcare Centre</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="designation"><i class="fas fa-user-tag"></i>Designation</label>
+              <input type="text" id="designation" class="form-control" value="${escapeHtml(trainee.designation)}">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-stethoscope"></i>Area of Specialization</label>
+              <div id="specializationMultiselect" class="multiselect-container">
+                <div class="multiselect-selected" id="specializationSelected">
+                  <span class="placeholder">Select specializations</span>
+                </div>
+                <div class="multiselect-dropdown" id="specializationDropdown"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-barcode"></i>Device Serial Number</label>
+              <div id="deviceSerialMultiselect" class="multiselect-container">
+                <div class="multiselect-selected" id="deviceSerialSelected">
+                  <span class="placeholder">Select device serial numbers</span>
+                </div>
+                <div class="multiselect-dropdown" id="deviceSerialDropdown"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="firstTraining"><i class="fas fa-calendar-alt"></i>First Training</label>
+              <input type="text" id="firstTraining" class="form-control" value="${formatDate(trainee.firstTraining)}" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="latestTraining"><i class="fas fa-calendar-check"></i>Latest Training</label>
+              <input type="text" id="latestTraining" class="form-control" value="${formatDate(trainee.latestTraining)}" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="recertificationDate"><i class="fas fa-calendar-plus"></i>Re-certification Date</label>
+              <input type="text" id="recertificationDate" class="form-control" value="${formatDate(trainee.recertificationDate)}" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="completedTrainings"><i class="fas fa-award"></i>Completed Trainings</label>
+              <input type="text" id="completedTrainings" class="form-control" value="${escapeHtml(trainee.completedTrainings) || '0'}" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="status"><i class="fas fa-toggle-on"></i>Trainee Status</label>
+              <select id="status" class="form-control">
+                <option value="Active" ${trainee.status === 'Active' ? 'selected' : ''}>Active</option>
+                <option value="Inactive" ${trainee.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="submit" id="saveButton" class="btn btn-success"><i class="fas fa-save"></i>Save</button>
+            <button type="button" id="cancelButton" class="btn btn-danger"><i class="fas fa-times"></i>Cancel</button>
+          </div>
+        </form>
+      </div>
+    `;
+    
+    // Show view mode by default
+    document.getElementById('viewMode').style.display = 'block';
+    
+    // Add event listeners for view mode
+    document.getElementById('editButton').addEventListener('click', switchToEditMode);
+    document.getElementById('closeViewButton').addEventListener('click', closeModal);
+    
+    // Add event listeners for edit mode
+    document.getElementById('cancelButton').addEventListener('click', switchToViewMode);
+    document.getElementById('editForm').addEventListener('submit', saveTraineeData);
+    
+    // Add validation for handphone field
+    const handphoneInput = document.getElementById('handphone');
+    const handphoneError = document.getElementById('handphoneError');
+    
+    handphoneInput.addEventListener('input', function() {
+      const value = this.value;
+      const isValid = /^[0-9+\-\s]*$/.test(value);
+      
+      if (!isValid) {
+        handphoneError.textContent = 'Only numbers, +, and - are allowed';
+        handphoneError.innerHTML = '<i class="fas fa-exclamation-circle"></i>Only numbers, +, and - are allowed';
+        this.setCustomValidity('Only numbers, +, and - are allowed');
+      } else {
+        handphoneError.textContent = '';
+        this.setCustomValidity('');
+      }
+    });
+    
+    // Add event listener for the training history button
+    document.getElementById('viewTrainingHistoryBtn').addEventListener('click', function() {
+      const traineeId = currentTrainee.traineeId;
+      const historyContent = document.getElementById('trainingHistoryContent');
+      
+      if (!traineeId) {
+        historyContent.innerHTML = '<div class="alert-message"><i class="fas fa-exclamation-circle"></i> No trainee ID available</div>';
+        historyContent.style.display = 'block';
+        return;
+      }
+      
+      // Show loading state
+      historyContent.innerHTML = '<div class="loading-indicator"><div class="spinner" style="margin: 10px auto;"></div><p>Loading training history...</p></div>';
+      historyContent.style.display = 'block';
+      
+      // Fetch training history from server
+      google.script.run
+        .withSuccessHandler(function(response) {
+          try {
+            const result = JSON.parse(response);
+            
+            if (result.success && result.data.length > 0) {
+              // Create a table for the training history
+              let tableHtml = '<div class="training-history-table-container">';
+              tableHtml += '<table class="training-history-table">';
+              tableHtml += '<thead><tr>';
+              tableHtml += '<th>Training ID</th>';
+              tableHtml += '<th>Date</th>';
+              tableHtml += '<th>Training Type</th>';
+              tableHtml += '<th>Grade</th>';
+              tableHtml += '<th>Healthcare</th>';
+              tableHtml += '<th>Trainer</th>';
+              tableHtml += '</tr></thead>';
+              tableHtml += '<tbody>';
+              
+              result.data.forEach(training => {
+                // Determine grade class for styling
+                let gradeClass = '';
+                if (training.grade) {
+                  const gradeValue = parseFloat(training.grade);
+                  if (!isNaN(gradeValue)) {
+                    if (gradeValue >= 80) gradeClass = 'grade-excellent';
+                    else if (gradeValue >= 70) gradeClass = 'grade-good';
+                    else if (gradeValue >= 60) gradeClass = 'grade-average';
+                    else gradeClass = 'grade-poor';
+                  }
+                }
+                
+                tableHtml += '<tr>';
+                tableHtml += '<td>' + escapeHtml(training.trainingId) + '</td>';
+                tableHtml += '<td>' + escapeHtml(training.date) + '</td>';
+                tableHtml += '<td>' + escapeHtml(training.trainingType) + '</td>';
+                tableHtml += '<td class="' + gradeClass + '">' + escapeHtml(training.grade) + '</td>';
+                tableHtml += '<td>' + escapeHtml(training.affiliatedHealthcare) + '</td>';
+                tableHtml += '<td>' + escapeHtml(training.trainer) + '</td>';
+                tableHtml += '</tr>';
+              });
+              
+              tableHtml += '</tbody></table></div>';
+              
+              // Add a close button
+              tableHtml += '<button id="closeHistoryBtn" class="btn btn-secondary" style="margin-top: 15px;"><i class="fas fa-times"></i> Close History</button>';
+              
+              historyContent.innerHTML = tableHtml;
+              
+              // Add event listener to close button
+              document.getElementById('closeHistoryBtn').addEventListener('click', function() {
+                historyContent.style.display = 'none';
+              });
+            } else if (result.success && result.data.length === 0) {
+              historyContent.innerHTML = '<div class="alert-message"><i class="fas fa-info-circle"></i> No training history found for this trainee</div>';
+            } else {
+              historyContent.innerHTML = '<div class="alert-message error"><i class="fas fa-exclamation-triangle"></i> Error: ' + escapeHtml(result.message) + '</div>';
+            }
+          } catch (error) {
+            historyContent.innerHTML = '<div class="alert-message error"><i class="fas fa-exclamation-triangle"></i> Error processing response</div>';
+            console.error('Error processing response:', error);
+          }
+        })
+        .withFailureHandler(function(error) {
+          historyContent.innerHTML = '<div class="alert-message error"><i class="fas fa-exclamation-triangle"></i> Error fetching training history: ' + escapeHtml(error) + '</div>';
+          console.error('Error fetching training history:', error);
+        })
+        .getTrainingHistory(traineeId);
+    });
+    
+    // Show the modal
+    traineeModal.style.display = 'block';
+  }
+  
+  // Switch to edit mode
+  function switchToEditMode() {
+    document.getElementById('viewMode').style.display = 'none';
+    document.getElementById('editMode').style.display = 'block';
+    
+    // Populate dropdowns
+    populateHealthcareCentres();
+    setupMultiselect('specialization', currentTrainee.specialization);
+    setupMultiselect('deviceSerial', currentTrainee.deviceSerialNumber);
+  }
+  
+  // Switch to view mode
+  function switchToViewMode() {
+    document.getElementById('editMode').style.display = 'none';
+    document.getElementById('viewMode').style.display = 'block';
+  }
+  
+  // Populate healthcare centre dropdown
+  function populateHealthcareCentres() {
+    const select = document.getElementById('healthcareCentre');
+    
+    // Clear existing options except the first one
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+    
+    // Add options from the dropdown data
+    dropdownOptions.healthcareCentres.forEach(centre => {
+      const option = document.createElement('option');
+      option.value = centre;
+      option.textContent = centre;
+      
+      if (centre === currentTrainee.healthcareCentre) {
+        option.selected = true;
+      }
+      
+      select.appendChild(option);
+    });
+  }
+  
+  // Setup multiselect dropdown
+  function setupMultiselect(type, currentValues) {
+    const containerId = type + 'Multiselect';
+    const selectedId = type + 'Selected';
+    const dropdownId = type + 'Dropdown';
+    
+    const container = document.getElementById(containerId);
+    const selectedContainer = document.getElementById(selectedId);
+    const dropdown = document.getElementById(dropdownId);
+    
+    // Clear existing content
+    selectedContainer.innerHTML = '';
+    dropdown.innerHTML = '';
+    
+    // Parse current values
+    let selectedValues = [];
+    if (currentValues) {
+      selectedValues = currentValues.toString().split(',').map(val => val.trim()).filter(val => val);
+    }
+    
+    // Add selected values as tags
+    if (selectedValues.length > 0) {
+      selectedValues.forEach(value => {
+        const tag = document.createElement('span');
+        tag.className = 'multiselect-tag';
+        tag.textContent = value;
+        tag.innerHTML += `<span class="multiselect-tag-remove" data-value="${value}">×</span>`;
+        selectedContainer.appendChild(tag);
+      });
+    } else {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'placeholder';
+      placeholder.textContent = `Select ${type === 'specialization' ? 'specializations' : 'device serial numbers'}`;
+      selectedContainer.appendChild(placeholder);
+    }
+    
+    // Add options to dropdown
+    const options = type === 'specialization' ? dropdownOptions.specializations : dropdownOptions.deviceSerials;
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('div');
+      optionElement.className = 'multiselect-option';
+      if (selectedValues.includes(option)) {
+        optionElement.className += ' selected';
+      }
+      optionElement.textContent = option;
+      optionElement.dataset.value = option;
+      dropdown.appendChild(optionElement);
+    });
+    
+    // Add event listeners
+    selectedContainer.addEventListener('click', function() {
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!container.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+    
+    // Handle option selection
+    dropdown.addEventListener('click', function(e) {
+      const option = e.target.closest('.multiselect-option');
+      if (!option) return;
+      
+      const value = option.dataset.value;
+      option.classList.toggle('selected');
+      
+      // Update selected values
+      if (option.classList.contains('selected')) {
+        // Add value if not already selected
+        if (!selectedValues.includes(value)) {
+          selectedValues.push(value);
+          
+          // Remove placeholder if present
+          const placeholder = selectedContainer.querySelector('.placeholder');
+          if (placeholder) {
+            selectedContainer.removeChild(placeholder);
+          }
+          
+          // Add tag
+          const tag = document.createElement('span');
+          tag.className = 'multiselect-tag';
+          tag.textContent = value;
+          tag.innerHTML += `<span class="multiselect-tag-remove" data-value="${value}">×</span>`;
+          selectedContainer.appendChild(tag);
+        }
+      } else {
+        // Remove value
+        selectedValues = selectedValues.filter(val => val !== value);
+        
+        // Remove tag
+        const tags = selectedContainer.querySelectorAll('.multiselect-tag');
+        tags.forEach(tag => {
+          if (tag.textContent.includes(value)) {
+            selectedContainer.removeChild(tag);
+          }
+        });
+        
+        // Add placeholder if no values selected
+        if (selectedValues.length === 0) {
+          const placeholder = document.createElement('span');
+          placeholder.className = 'placeholder';
+          placeholder.textContent = `Select ${type === 'specialization' ? 'specializations' : 'device serial numbers'}`;
+          selectedContainer.appendChild(placeholder);
+        }
+      }
+    });
+    
+    // Handle tag removal
+    selectedContainer.addEventListener('click', function(e) {
+      if (e.target.classList.contains('multiselect-tag-remove')) {
+        const value = e.target.dataset.value;
+        
+        // Remove from selected values
+        selectedValues = selectedValues.filter(val => val !== value);
+        
+        // Remove tag
+        const tag = e.target.parentNode;
+        selectedContainer.removeChild(tag);
+        
+        // Update dropdown option
+        const option = dropdown.querySelector(`.multiselect-option[data-value="${value}"]`);
+        if (option) {
+          option.classList.remove('selected');
+        }
+        
+        // Add placeholder if no values selected
+        if (selectedValues.length === 0) {
+          const placeholder = document.createElement('span');
+          placeholder.className = 'placeholder';
+          placeholder.textContent = `Select ${type === 'specialization' ? 'specializations' : 'device serial numbers'}`;
+          selectedContainer.appendChild(placeholder);
+        }
+        
+        // Prevent dropdown from opening
+        e.stopPropagation();
+      }
+    });
+  }
+  
+  // Save trainee data
+  function saveTraineeData(e) {
+    e.preventDefault();
+    
+    // Get form values
+    const updatedTrainee = {
+      rowIndex: currentTrainee.rowIndex,
+      name: document.getElementById('name').value,
+      icPassport: document.getElementById('icPassport').value,
+      traineeId: document.getElementById('traineeId').value,
+      email: document.getElementById('email').value,
+      handphone: document.getElementById('handphone').value,
+      healthcareCentre: document.getElementById('healthcareCentre').value,
+      designation: document.getElementById('designation').value,
+      status: document.getElementById('status').value,
+      
+      // Get multiselect values
+      specialization: getMultiselectValues('specialization'),
+      deviceSerialNumber: getMultiselectValues('deviceSerial'),
+      
+      // Keep read-only values unchanged
+      firstTraining: currentTrainee.firstTraining,
+      latestTraining: currentTrainee.latestTraining,
+      recertificationDate: currentTrainee.recertificationDate,
+      completedTrainings: currentTrainee.completedTrainings
+    };
+    
+    // Show loading state
+    const saveButton = document.getElementById('saveButton');
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveButton.disabled = true;
+    
+    // Send data to server
+    google.script.run
+      .withSuccessHandler(function(response) {
+        try {
+          const result = JSON.parse(response);
+          
+          if (result.success) {
+            // Update current trainee with new values
+            Object.assign(currentTrainee, updatedTrainee);
+            
+            // If a trainee ID was generated, update it
+            if (result.traineeId) {
+              currentTrainee.traineeId = result.traineeId;
+            }
+            
+            // Update the trainee in the allTrainees array
+            const index = allTrainees.findIndex(t => t.rowIndex === currentTrainee.rowIndex);
+            if (index !== -1) {
+              allTrainees[index] = currentTrainee;
+            }
+            
+            // Update filtered trainees if needed
+            const filteredIndex = filteredTrainees.findIndex(t => t.rowIndex === currentTrainee.rowIndex);
+            if (filteredIndex !== -1) {
+              filteredTrainees[filteredIndex] = currentTrainee;
+            }
+            
+            // Re-render cards and table
+            renderTraineeCards(filteredTrainees);
+            renderTraineeTable(filteredTrainees);
+            updatePagination();
+            
+            // Show success message
+            showToast('Trainee data updated successfully', false);
+            
+            // Switch back to view mode
+            switchToViewMode();
+            
+            // Update the view mode content
+            openModal(currentTrainee);
+          } else {
+            showToast('Error: ' + result.message, true);
+          }
+        } catch (error) {
+          showToast('Error processing response', true);
+          console.error('Error processing response:', error);
+        }
+        
+        // Reset button state
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+      })
+      .withFailureHandler(function(error) {
+        showToast('Error saving data: ' + error, true);
+        console.error('Error saving data:', error);
+        
+        // Reset button state
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+      })
+      .updateTraineeData(updatedTrainee);
+  }
+  
+  // Get values from multiselect
+  function getMultiselectValues(type) {
+    const selectedId = type + 'Selected';
+    const selectedContainer = document.getElementById(selectedId);
+    const tags = selectedContainer.querySelectorAll('.multiselect-tag');
+    
+    if (tags.length === 0) return '';
+    
+    const values = Array.from(tags).map(tag => {
+      // Extract the text without the "×" remove button
+      return tag.textContent.replace('×', '').trim();
+    });
+    
+    return values.join(', ');
+  }
+  
+  // Close the modal
+  function closeModal() {
+    traineeModal.style.display = 'none';
+  }
+  
+  // Show toast notification
+  function showToast(message, isError) {
+    const toast = document.getElementById('toast');
+    const icon = isError ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-check-circle"></i>';
+    toast.innerHTML = icon + message;
+    toast.className = isError ? 'toast toast-error' : 'toast toast-success';
+    toast.style.display = 'flex'; // Changed from 'block' to 'flex' to align items properly
+    
+    // Hide after 3 seconds
+    setTimeout(function() {
+      toast.style.display = 'none';
+    }, 3000);
+  }
+  
+  // Helper function to get status class
+  function getStatusClass(status) {
+    return status && status.toString().toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+  }
+  
+  // Helper function to format date
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    
+    try {
+      // Try to parse the date
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return dateString; // Return original if not a valid date
+      }
+      
+      // Format the date
+      return date.toLocaleDateString();
+    } catch (e) {
+      return dateString;
+    }
+  }
+  
+  // Helper function to escape HTML to prevent XSS
+  function escapeHtml(str) {
+    if (!str) return '';
+    // Convert to string first to handle non-string values
+    str = String(str);
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+  
+  // Initialize the app when the page loads
+  window.onload = init;
+</script>
+</body>
+</html>
