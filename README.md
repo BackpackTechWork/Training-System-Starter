@@ -8,10 +8,10 @@
 
 <!-- Animated Badges -->
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=femR2wbTHaQ">
+  <a href="https://www.tiktok.com/@backpacktechworks/video/7508649940055297298">
     <img src="https://img.shields.io/badge/🎬%20Launch%20Video-Watch%20Now-E48F24?style=for-the-badge&logo=youtube&logoColor=white&labelColor=000000" alt="Launch Video"/>
   </a>
-  <a href="https://www.youtube.com/watch?v=XXYlFuWEuKI&list=RDQMgEzdN5RuCXE&start_radio=1">
+  <a href="https://youtube.com/playlist?list=PL63KhzCtHMg4BSkqvWZzhwbno8_EWD3Mt&si=NSVsheoHK8w0I9Yj">
     <img src="https://img.shields.io/badge/📚%20Tutorial%20Series-Learn%20More-573FD7?style=for-the-badge&logo=youtube&logoColor=white&labelColor=000000" alt="Tutorial Series"/>
   </a>
   <a href="https://backpacktechworks.my.canva.site/">
@@ -221,11 +221,11 @@ Training-System/
 
 ### 📺 Video Content
 
-<a href="https://www.youtube.com/watch?v=femR2wbTHaQ">
+<a href="https://www.tiktok.com/@backpacktechworks/video/7508649940055297298">
   <img src="https://img.shields.io/badge/🎬%20Launch%20Video-See%20the%20system%20in%20action-E48F24?style=for-the-badge&logo=youtube&logoColor=white&labelColor=000000" alt="Launch Video"/>
 </a>
 
-<a href="https://www.youtube.com/watch?v=XXYlFuWEuKI&list=RDQMgEzdN5RuCXE&start_radio=1">
+<a href="https://youtube.com/playlist?list=PL63KhzCtHMg4BSkqvWZzhwbno8_EWD3Mt&si=NSVsheoHK8w0I9Yj">
   <img src="https://img.shields.io/badge/📚%20Tutorial%20Series-Complete%20learning%20playlist-573FD7?style=for-the-badge&logo=youtube&logoColor=white&labelColor=000000" alt="Tutorial Series"/>
 </a>
 
@@ -332,13 +332,13 @@ Training-System/
 ### 🎯 Ready to Transform Your Training Programs?
 
 <p align="center">
-  <a href="https://backpacktechworks.my.canva.site/">
-    <img src="https://img.shields.io/badge/Get%20Started%20Now-11358B?style=for-the-badge&logo=rocket&logoColor=white" alt="Get Started Now"/>
+  <a href="https://script.google.com/macros/s/AKfycbzL7vN63ytouYhdYCrVGQsDgKJWNh_4Yx1rpBTV-EpzMioL8Rt8d75Td974zrzn2Zfo/exec">
+    <img src="https://img.shields.io/badge/Try%20The%20System-11358B?style=for-the-badge&logo=rocket&logoColor=white" alt="Try the system"/>
   </a>
-  <a href="https://www.youtube.com/watch?v=femR2wbTHaQ">
-    <img src="https://img.shields.io/badge/Drive%20To%20Copy-E48F24?style=for-the-badge&logo=play&logoColor=white" alt="Drive to copy"/>
+  <a href="https://drive.google.com/drive/folders/1DWUnRnB_72SI9z87K5nyZfQr6YncQ5_k?usp=drive_link">
+    <img src="https://img.shields.io/badge/Files%20To%20Copy-E48F24?style=for-the-badge&logo=play&logoColor=white" alt="Files to copy"/>
   </a>
-  <a href="https://www.youtube.com/watch?v=XXYlFuWEuKI&list=RDQMgEzdN5RuCXE&start_radio=1">
+  <a href="https://youtube.com/playlist?list=PL63KhzCtHMg4BSkqvWZzhwbno8_EWD3Mt&si=NSVsheoHK8w0I9Yj">
     <img src="https://img.shields.io/badge/Learn%20More-573FD7?style=for-the-badge&logo=book&logoColor=white" alt="Learn More"/>
   </a>
 </p>
