@@ -152,83 +152,92 @@ function getTrainingHistory(traineeId) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const participatingSheet = ss.getSheetByName("Participating Trainees");
     const allTrainingsSheet = ss.getSheetByName("All Trainings");
-    
+
     if (!participatingSheet || !allTrainingsSheet) {
       return JSON.stringify({
         success: false,
         message: "Required sheets not found"
       });
     }
-    
-    // Get all data at once to minimize API calls
-    const participatingData = participatingSheet.getRange("C4:H" + participatingSheet.getLastRow()).getValues();
-    const allTrainingsData = allTrainingsSheet.getRange("C4:I" + allTrainingsSheet.getLastRow()).getValues();
-    
-    // Create a map of training data for quick lookup
+
+    const lastRowParticipants = participatingSheet.getLastRow();
+    const lastRowTrainings = allTrainingsSheet.getLastRow();
+
+    const participatingValues = participatingSheet.getRange("C4:H" + lastRowParticipants).getValues();
+    const participatingFormulas = participatingSheet.getRange("F4:F" + lastRowParticipants).getFormulas();
+
+    const trainingValues = allTrainingsSheet.getRange("C4:I" + lastRowTrainings).getValues();
+    const trainingFormulas = allTrainingsSheet.getRange("I4:I" + lastRowTrainings).getFormulas();
+
     const trainingMap = new Map();
-    allTrainingsData.forEach(row => {
-      const gradebookLink = row[6]; // Column I
-      const trainingId = row[1]; // Column D
-      
-      if (gradebookLink || trainingId) {
-        trainingMap.set(gradebookLink, {
-          trainer: row[0], // Column C
-          trainingType: row[5], // Column H
-          date: row[3] instanceof Date ? Utilities.formatDate(row[3], Session.getScriptTimeZone(), "yyyy-MM-dd") : "Unknown"
-        });
-        
-        if (trainingId) {
-          trainingMap.set(trainingId, {
-            trainer: row[0], // Column C
-            trainingType: row[5], // Column H
-            date: row[3] instanceof Date ? Utilities.formatDate(row[3], Session.getScriptTimeZone(), "yyyy-MM-dd") : "Unknown"
-          });
-        }
-      }
+
+    trainingValues.forEach((row, i) => {
+      const trainer = row[0];
+      const trainingId = row[1];
+      const date = row[3];
+      const trainingType = row[5];
+      const formula = trainingFormulas[i][0];
+
+      let url = null;
+      const urlMatch = typeof formula === "string" ? formula.match(/HYPERLINK\("([^"]+)"/) : null;
+      if (urlMatch) url = urlMatch[1];
+
+      const formattedDate = date instanceof Date
+        ? Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd")
+        : "Unknown";
+
+      const details = {
+        trainer: trainer || "Unknown",
+        trainingType: trainingType || "Unknown",
+        date: formattedDate
+      };
+
+      if (url) trainingMap.set(url, details);
+      if (trainingId) trainingMap.set(trainingId, details);
     });
-    
-    // Filter and process training history
+
     const trainingHistory = [];
-    participatingData.forEach(row => {
-      const rowTraineeId = row[0]; // Column C
-      
+
+    participatingValues.forEach((row, i) => {
+      const rowTraineeId = row[0];
       if (rowTraineeId === traineeId) {
-        const trainingId = row[2]; // Column E
-        const gradebookLink = row[3]; // Column F
-        
-        // Look up training details
-        let trainingDetails = trainingMap.get(gradebookLink) || trainingMap.get(trainingId) || {
+        const trainingId = row[2];
+        const gradebookFormula = participatingFormulas[i][0];
+        const grade = row[4];
+        const affiliatedHealthcare = row[5];
+
+        let gradebookLinkUrl = null;
+        const match = typeof gradebookFormula === "string" ? gradebookFormula.match(/HYPERLINK\("([^"]+)"/) : null;
+        if (match) gradebookLinkUrl = match[1];
+
+        const trainingDetails = trainingMap.get(gradebookLinkUrl) || trainingMap.get(trainingId) || {
           trainer: "Not found",
           trainingType: "Not found",
           date: "Unknown"
         };
-        
+
         trainingHistory.push({
           trainingId: trainingId,
-          grade: row[4], // Column G
-          affiliatedHealthcare: row[5], // Column H
+          grade: grade,
+          affiliatedHealthcare: affiliatedHealthcare,
           trainer: trainingDetails.trainer,
           trainingType: trainingDetails.trainingType,
           date: trainingDetails.date
         });
       }
     });
-    
-    // Sort training history by date (newest first)
+
     trainingHistory.sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
-      
-      if (!isNaN(dateA) && !isNaN(dateB)) {
-        return dateB - dateA;
-      }
-      return 0;
+      return (!isNaN(dateA) && !isNaN(dateB)) ? dateB - dateA : 0;
     });
-    
+
     return JSON.stringify({
       success: true,
       data: trainingHistory
     });
+
   } catch (error) {
     return JSON.stringify({
       success: false,
