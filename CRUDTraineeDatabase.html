@@ -429,11 +429,6 @@
   }
   
   @media (max-width: 768px) {
-    .detail-grid {
-      grid-template-columns: 1fr;
-      gap: 15px; /* Reduced gap on mobile */
-    }
-    
     .modal-content {
       width: 100%;
       margin: 0;
@@ -443,6 +438,24 @@
     .close-button {
       top: 15px;
       right: 15px;
+    }
+
+    .detail-item {
+      padding: 18px 16px;
+      font-size: 15px;
+    }
+
+    .detail-label {
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: block;
+      word-break: break-word;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      display: block;
+      word-break: break-word;
     }
   }
   
@@ -1341,60 +1354,104 @@
     }
   }
   
-  /* Training History Styles - Enhanced for mobile */
+/* Training History Styles - Enhanced for mobile */
+.training-history-table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Adjust training history table for mobile */
+@media (max-width: 768px) {
   .training-history-table-container {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    max-height: 400px; /* Taller on mobile for better scrolling */
+    margin-left: -10px;
+    margin-right: -10px;
+    width: calc(100% + 20px); /* Make it slightly wider than container */
+    border-radius: 6px;
   }
+}
 
-  /* Adjust training history table for mobile */
-  @media (max-width: 768px) {
-    .training-history-table-container {
-      max-height: 400px; /* Taller on mobile for better scrolling */
-      margin-left: -10px;
-      margin-right: -10px;
-      width: calc(100% + 20px); /* Make it slightly wider than container */
-      border-radius: 6px;
-    }
-  }
+.training-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #11358B;
+  background-color: white;
+  table-layout: fixed; /* Fixed layout for better mobile rendering */
+}
 
-  .training-history-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: #11358B;
-    background-color: white;
-    table-layout: fixed; /* Fixed layout for better mobile rendering */
-  }
+.training-history-table th {
+  background-color: #573FD7;
+  color: white;
+  text-align: left;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-size: 14px;
+}
 
-  .training-history-table th {
-    background-color: #573FD7;
-    color: white;
-    text-align: left;
-    padding: 10px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    font-size: 14px;
-  }
+.training-history-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(87, 63, 215, 0.1);
+  word-break: break-word; /* Allow text to wrap */
+  font-size: 14px;
+}
 
+.training-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.training-history-table tr:nth-child(even) {
+  background-color: rgba(87, 63, 215, 0.03);
+}
+
+/* Responsive adjustments for training history table */
+@media (max-width: 768px) {
+  .training-history-table th,
   .training-history-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid rgba(87, 63, 215, 0.1);
-    word-break: break-word; /* Allow text to wrap */
-    font-size: 14px;
+    padding: 6px 4px;
+    font-size: 8px; 
   }
-
-  .training-history-table tr:last-child td {
-    border-bottom: none;
+  
+  /* Adjust column widths on mobile */
+  .training-history-table th:nth-child(1),
+  .training-history-table td:nth-child(1) {
+    width: 20%; /* Training ID */
   }
-
-  .training-history-table tr:nth-child(even) {
-    background-color: rgba(87, 63, 215, 0.03);
+  
+  .training-history-table th:nth-child(2),
+  .training-history-table td:nth-child(2) {
+    width: 20%; /* Date */
   }
+  
+  .training-history-table th:nth-child(3),
+  .training-history-table td:nth-child(3) {
+    width: 30%; /* Training Type */
+  }
+  
+  .training-history-table th:nth-child(4),
+  .training-history-table td:nth-child(4) {
+    width: 20%; /* Grade */
+  }
+  
+  /* Hide less important columns on small screens */
+  .training-history-table th:nth-child(5),
+  .training-history-table td:nth-child(5),
+  .training-history-table th:nth-child(6),
+  .training-history-table td:nth-child(6) {
+    display: none;
+  }
+  
+  /* Make the view training history button full width on mobile */
+  #viewTrainingHistoryBtn, #closeHistoryBtn {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
 
   .grade-excellent {
     color: #28a745;
@@ -1506,15 +1563,15 @@
       <i class="fas fa-users"></i>
       <span>Trainee Database</span>
     </a>
-    <a href="YOUR_QUESTIONS_DEPLOYMENT_LINK" class="sidebar-item">
+    <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
       <i class="fas fa-chalkboard-teacher"></i>
       <span>Training Management</span>
     </a>
-    <a href="YOUR_SETTINGS_DEPLOYMENT_LINK" class="sidebar-item">
+    <a href="YOUR_QUESTIONS_DEPLOYMENT_LINK" class="sidebar-item">
       <i class="fas fa-question-circle"></i>
       <span>Questions Management</span>
     </a>
-    <a href="YOUR_TRAINING_MANAGEMENT_DEPLOYMENT_LINK" class="sidebar-item">
+    <a href="YOUR_SETTINGS_DEPLOYMENT_LINK" class="sidebar-item">
       <i class="fas fa-cog"></i>
       <span>Settings</span>
     </a>
@@ -2134,7 +2191,7 @@ function setupViewToggle() {
       }
     }
 
-    allTrainees = data;
+    allTrainees = data.reverse();
     filteredTrainees = [...allTrainees];
     renderTraineeCards(filteredTrainees);
     renderTraineeTable(filteredTrainees);
@@ -2698,16 +2755,17 @@ function handleSearch() {
               
               result.data.forEach(training => {
                 // Determine grade class for styling
-                let gradeClass = '';
-                if (training.grade) {
-                  const gradeValue = parseFloat(training.grade);
-                  if (!isNaN(gradeValue)) {
-                    if (gradeValue >= 80) gradeClass = 'grade-excellent';
-                    else if (gradeValue >= 70) gradeClass = 'grade-good';
-                    else if (gradeValue >= 60) gradeClass = 'grade-average';
-                    else gradeClass = 'grade-poor';
-                  }
-                }
+                const gradeMap = {
+                  'outstanding': 'grade-excellent',
+                  'above average': 'grade-good',
+                  'average': 'grade-average',
+                  'below average': 'grade-poor',
+                  'needs improvement': 'grade-needs-improvement',
+                };
+
+                const gradeKey = training.grade?.trim().toLowerCase();
+                const gradeClass = gradeMap[gradeKey] || '';
+
                 
                 tableHtml += '<tr>';
                 tableHtml += '<td>' + escapeHtml(training.trainingId) + '</td>';
