@@ -240,24 +240,28 @@ Training-System/
 
 <div align="center">
 
-### 🚀 Built by Backpack Tech Works
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" width="40px"/><br>
+        <strong>Lead Developer</strong><br>
+        <a href="https://github.com/Darkguyaiman">@Darkguyaiman</a>
+      </td>
+      <td align="center">
+        <img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" width="40px"/><br>
+        <strong>Co-Developer</strong><br>
+        <a href="https://github.com/Ak-ko">@Ak-ko</a>
+      </td>
+    </tr>
+  </table>
+</div>
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=16&duration=3000&pause=1000&color=11358B&center=true&vCenter=true&width=600&lines=Innovative+solutions+for+modern+training+challenges;Empowering+organizations+with+cutting-edge+technology" alt="Company Motto"/>
+<div align="center">
 
-<table>
-<tr>
-<td align="center">
-<img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" width="40px"/>
-<br><strong>Developer 1</strong>
-<br><a href="https://github.com/Darkguyaiman">@Darkguyaiman</a>
-</td>
-<td align="center">
-<img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" width="40px"/>
-<br><strong>Developer 2</strong>
-<br><a href="https://github.com/Ak-ko">@Ak-ko</a>
-</td>
-</tr>
-</table>
+*Crafted with care for the community.*
+
+</div>
 
 </div>
 
