@@ -1,69 +1,49 @@
 const ss = SpreadsheetApp.getActiveSpreadsheet();
 
- 
 function doGet() {
-  try {
-    return HtmlService.createTemplateFromFile('CRUDDashboard')
-      .evaluate()
-      .setTitle('LTS Dashboard')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  } catch (error) {
-    Logger.log('Error in doGet: ' + error.toString());
-     
-    return HtmlService.createHtmlOutput(
-      '<h1>Error Loading Dashboard</h1>' +
-      '<p>There was an error loading the dashboard. Please try again later.</p>' +
-      '<p>Error details: ' + error.message + '</p>'
-    )
-    .setTitle('LTS Dashboard - Error')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  }
+  return HtmlService.createHtmlOutputFromFile('CRUDDashboard')
+    .setTitle('LTS Dashbord')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
 }
 
- 
+
+
 function getDashboardData() {
   try {
-     
-    const sheets = {
-      formResponses: ss.getSheetByName('Form Responses 2'),
-      allTrainings: ss.getSheetByName('All Trainings'),
-      settings: ss.getSheetByName('Settings')
-    };
-    
-     
-    const dataRanges = {};
-    
-    if (sheets.formResponses && sheets.formResponses.getLastRow() > 1) {
-      dataRanges.formResponses = sheets.formResponses.getRange('B2:O' + sheets.formResponses.getLastRow()).getValues();
-    }
-    
-    if (sheets.allTrainings && sheets.allTrainings.getLastRow() > 3) {
-      const lastRow = sheets.allTrainings.getLastRow();
-      dataRanges.trainingNames = sheets.allTrainings.getRange('B4:B' + lastRow).getValues().flat();
-      dataRanges.trainingStatuses = sheets.allTrainings.getRange('J4:J' + lastRow).getValues().flat();
-      
-       
-      const numRows = Math.min(10, lastRow - 3);
-      if (numRows > 0) {
-        dataRanges.recentTrainings = sheets.allTrainings.getRange(lastRow - numRows + 1, 2, numRows, 9).getValues();
-      }
-      
-       
-      dataRanges.trainingData = sheets.allTrainings.getRange(4, 3, lastRow - 3, 8).getValues();
-    }
-    
-    if (sheets.settings && sheets.settings.getLastRow() > 4) {
-      dataRanges.usernames = sheets.settings.getRange('D5:D' + sheets.settings.getLastRow()).getValues().flat().filter(Boolean);
-    }
-    
-     
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const formResponses = ss.getSheetByName('Form Responses 2');
+    const allTrainings = ss.getSheetByName('All Trainings');
+    const settings = ss.getSheetByName('Settings');
+
+
+    const formResponsesData = formResponses.getLastRow() > 1 
+      ? formResponses.getRange(2, 2, formResponses.getLastRow() - 1, 14).getValues() 
+      : [];
+
+    const lastTrainingRow = allTrainings.getLastRow();
+    const trainingRows = lastTrainingRow > 3 ? lastTrainingRow - 3 : 0;
+
+    const trainingNames = trainingRows ? allTrainings.getRange(4, 2, trainingRows, 1).getValues().map(r => r[0]) : [];
+    const trainingStatuses = trainingRows ? allTrainings.getRange(4, 10, trainingRows, 1).getValues().map(r => r[0]) : [];
+    const trainingData = trainingRows ? allTrainings.getRange(4, 3, trainingRows, 8).getValues() : [];
+
+    const recentRows = Math.min(10, trainingRows);
+    const recentTrainings = recentRows > 0 
+      ? allTrainings.getRange(lastTrainingRow - recentRows + 1, 2, recentRows, 9).getValues() 
+      : [];
+
+    const usernames = settings.getLastRow() > 4 
+      ? settings.getRange(5, 4, settings.getLastRow() - 4, 1).getValues().map(r => r[0]).filter(Boolean) 
+      : [];
+
+
     return {
-      notifications: safeExecute(() => getNotifications(sheets.formResponses, dataRanges.formResponses), []),
-      trainings: safeExecute(() => getRecentTrainings(sheets.allTrainings, dataRanges.recentTrainings), []),
-      trainingStats: safeExecute(() => getTrainingStats(dataRanges.trainingNames, dataRanges.trainingStatuses), { total: 0, inProgress: 0, completed: 0, canceled: 0, rescheduled: 0 }),
-      traineeStats: safeExecute(() => getTraineeStats(sheets.formResponses, dataRanges.formResponses), { total: 0, active: 0, inactive: 0 }),
-      trainerStats: safeExecute(() => getTrainerStats(dataRanges.usernames, dataRanges.trainingData), [])
+      notifications: getNotifications(formResponses, formResponsesData) || [],
+      trainings: getRecentTrainings(allTrainings, recentTrainings) || [],
+      trainingStats: getTrainingStats(trainingNames, trainingStatuses) || { total: 0, inProgress: 0, completed: 0, canceled: 0, rescheduled: 0 },
+      traineeStats: getTraineeStats(formResponses, formResponsesData) || { total: 0, active: 0, inactive: 0 },
+      trainerStats: getTrainerStats(usernames, trainingData) || []
     };
   } catch (error) {
     Logger.log('Error in getDashboardData: ' + error.toString());
@@ -71,7 +51,8 @@ function getDashboardData() {
   }
 }
 
- 
+
+
 function safeExecute(func, defaultValue) {
   try {
     return func();
@@ -81,7 +62,7 @@ function safeExecute(func, defaultValue) {
   }
 }
 
- 
+
 function getNotifications(sheet, data) {
   try {
     if (!sheet || !data || data.length === 0) return [];
@@ -92,7 +73,7 @@ function getNotifications(sheet, data) {
     const MS_PER_DAY = 1000 * 60 * 60 * 24;
     const notifications = [];
 
-     
+
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
       const name = row[0];
@@ -120,7 +101,7 @@ function getNotifications(sheet, data) {
       }
     }
 
-     
+
     return notifications.sort((a, b) => a.daysLeft - b.daysLeft);
   } catch (error) {
     Logger.log('Error in getNotifications: ' + error.toString());
@@ -128,12 +109,12 @@ function getNotifications(sheet, data) {
   }
 }
 
- 
+
 function getRecentTrainings(sheet, data) {
   try {
     if (!sheet || !data || data.length === 0) return [];
 
-     
+
     const trainings = data
       .filter(row => row[0])
       .map(row => {
@@ -159,12 +140,12 @@ function getRecentTrainings(sheet, data) {
   }
 }
 
- 
+
 function getTrainingStats(nameCol, statusCol) {
   try {
     if (!nameCol || !statusCol) return { total: 0, inProgress: 0, completed: 0, canceled: 0, rescheduled: 0 };
 
-     
+
     const stats = {
       total: nameCol.filter(n => n !== '').length,
       inProgress: 0,
@@ -173,7 +154,7 @@ function getTrainingStats(nameCol, statusCol) {
       rescheduled: 0
     };
 
-     
+
     for (let i = 0; i < statusCol.length; i++) {
       const status = statusCol[i];
       if (status === 'In Progress') stats.inProgress++;
@@ -189,22 +170,22 @@ function getTrainingStats(nameCol, statusCol) {
   }
 }
 
- 
+
 function getTraineeStats(sheet, data) {
   try {
     if (!sheet || !data || data.length === 0) return { total: 0, active: 0, inactive: 0 };
 
-     
+
     let total = 0;
     let active = 0;
     let inactive = 0;
 
-     
+
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
-      if (row[6] !== '') {  
+      if (row[6] !== '') { 
         total++;
-        if (row[13] === 'Active') active++;  
+        if (row[13] === 'Active') active++; 
         else if (row[13] === 'Inactive') inactive++;
       }
     }
@@ -216,20 +197,20 @@ function getTraineeStats(sheet, data) {
   }
 }
 
- 
+
 function getTrainerStats(usernames, trainingData) {
   try {
     if (!usernames || !trainingData) return [];
 
-     
+
     const trainerStats = {};
     
-     
+
     usernames.forEach(username => {
       trainerStats[username] = { username, completed: 0, inProgress: 0 };
     });
     
-     
+
     for (let i = 0; i < trainingData.length; i++) {
       const row = trainingData[i];
       const username = row[0];
@@ -241,7 +222,7 @@ function getTrainerStats(usernames, trainingData) {
       }
     }
     
-     
+
     return Object.values(trainerStats);
   } catch (error) {
     Logger.log('Error in getTrainerStats: ' + error.toString());
@@ -249,7 +230,7 @@ function getTrainerStats(usernames, trainingData) {
   }
 }
 
- 
+
 function formatDate(date) {
   try {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return 'Invalid Date';
