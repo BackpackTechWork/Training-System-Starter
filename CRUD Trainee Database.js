@@ -1,29 +1,36 @@
 function doGet() {
   return HtmlService.createTemplateFromFile('CRUDTraineeDatabase')
     .evaluate()
-    .setTitle('Trainee Database Viewer')
+    .setTitle('Trainee Database')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+function getInitData() {
+  return Promise.all([
+    getTraineeData(),
+    getDropdownOptions()
+  ]).then(([traineeData, dropdownOptions]) => {
+    return {
+      traineeData,
+      dropdownOptions
+    };
+  });
+}
+
+
 function getTraineeData() {
-  // Get the active spreadsheet once and store it
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Form Responses 2");
   
-  // Get the last row with data to avoid processing empty rows
   const lastRow = getLastRowWithData(sheet, "B");
   if (lastRow < 2) return JSON.stringify([]);
-  
-  // Get all data at once instead of cell by cell
   const dataRange = sheet.getRange("B2:O" + lastRow);
-  const data = dataRange.getValues();
-
-  // Process all data at once using map
+  const data = dataRange.getValues();  
   const trainees = data
-    .filter(row => row[0] !== "") // Filter out empty rows
+    .filter(row => row[0] !== "") 
     .map((row, index) => ({
-      rowIndex: index + 2, // Store the actual row index for updates (starting from row 2)
+      rowIndex: index + 2, 
       name: row[0] || "",
       icPassport: row[1] || "",
       traineeId: row[6] || "",
@@ -40,10 +47,10 @@ function getTraineeData() {
       status: row[13] || ""
     }));
 
+    console.log(trainees)
   return JSON.stringify(trainees);
 }
 
-// Helper function to find the last row with data in a specific column
 function getLastRowWithData(sheet, column) {
   const values = sheet.getRange(column + "1:" + column + sheet.getMaxRows()).getValues();
   for (let i = values.length - 1; i >= 0; i--) {
@@ -58,10 +65,10 @@ function getDropdownOptions() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const settingsSheet = ss.getSheetByName("Settings");
   
-  // Get all data at once to minimize API calls
+  
   const dataRange = settingsSheet.getRange("F5:I" + settingsSheet.getLastRow()).getValues();
   
-  // Process the data in memory
+  
   const healthcareCentreOptions = [];
   const deviceSerialOptions = [];
   const specializationOptions = [];
@@ -83,13 +90,13 @@ function generateUniqueTraineeId() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Form Responses 2");
   
-  // Get all IDs at once
+  
   const idColumn = sheet.getRange("H2:H" + sheet.getLastRow()).getValues();
   const existingIds = new Set(idColumn.flat().filter(id => id !== ""));
   
   let newId;
   do {
-    // Generate a random 6-digit number
+    
     const randomDigits = Math.floor(100000 + Math.random() * 900000);
     newId = "T" + randomDigits;
   } while (existingIds.has(newId));
@@ -120,12 +127,12 @@ function updateTraineeData(traineeData) {
         traineeData.traineeId,
         traineeData.specialization,
         traineeData.deviceSerialNumber,
-        existingRow[9],  // First Training
-        existingRow[10], // Latest Training
-        existingRow[11], // Re-certification Date
+        existingRow[9],  
+        existingRow[10], 
+        existingRow[11], 
         rowIndex === 2 
           ? `=ARRAYFORMULA(IF(H2:H="", "", COUNTIFS('Participating Trainees'!C:C, H2:H)))` 
-          : "", // Completed Trainings (Column M)
+          : "", 
         traineeData.status
       ]
     ];
@@ -144,9 +151,6 @@ function updateTraineeData(traineeData) {
   }
 }
 
-
-
-
 function getTrainingHistory(traineeId) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -160,14 +164,16 @@ function getTrainingHistory(traineeId) {
       });
     }
 
-    const lastRowParticipants = participatingSheet.getLastRow();
-    const lastRowTrainings = allTrainingsSheet.getLastRow();
 
-    const participatingValues = participatingSheet.getRange("C4:H" + lastRowParticipants).getValues();
-    const participatingFormulas = participatingSheet.getRange("F4:F" + lastRowParticipants).getFormulas();
+    const participatingLastRow = participatingSheet.getLastRow();
+    const participatingRange = participatingSheet.getRange("C4:H" + participatingLastRow);
+    const participatingValues = participatingRange.getValues();
+    const participatingFormulas = participatingRange.getFormulas();
 
-    const trainingValues = allTrainingsSheet.getRange("C4:I" + lastRowTrainings).getValues();
-    const trainingFormulas = allTrainingsSheet.getRange("I4:I" + lastRowTrainings).getFormulas();
+    const allTrainingsLastRow = allTrainingsSheet.getLastRow();
+    const allTrainingsRange = allTrainingsSheet.getRange("C4:I" + allTrainingsLastRow);
+    const trainingValues = allTrainingsRange.getValues();
+    const trainingFormulas = allTrainingsRange.getFormulas();
 
     const trainingMap = new Map();
 
@@ -176,7 +182,8 @@ function getTrainingHistory(traineeId) {
       const trainingId = row[1];
       const date = row[3];
       const trainingType = row[5];
-      const formula = trainingFormulas[i][0];
+
+      const formula = trainingFormulas[i][6];
 
       let url = null;
       const urlMatch = typeof formula === "string" ? formula.match(/HYPERLINK\("([^"]+)"/) : null;
@@ -202,7 +209,8 @@ function getTrainingHistory(traineeId) {
       const rowTraineeId = row[0];
       if (rowTraineeId === traineeId) {
         const trainingId = row[2];
-        const gradebookFormula = participatingFormulas[i][0];
+
+        const gradebookFormula = participatingFormulas[i][3];
         const grade = row[4];
         const affiliatedHealthcare = row[5];
 
@@ -230,7 +238,17 @@ function getTrainingHistory(traineeId) {
     trainingHistory.sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
-      return (!isNaN(dateA) && !isNaN(dateB)) ? dateB - dateA : 0;
+
+      if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+        return dateB.getTime() - dateA.getTime();
+      }
+      if (!isNaN(dateA.getTime())) {
+        return -1;
+      }
+      if (!isNaN(dateB.getTime())) {
+        return 1;
+      }
+      return 0;
     });
 
     return JSON.stringify({
