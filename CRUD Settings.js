@@ -20,34 +20,23 @@ function doGet() {
 function getSettingsData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Settings");
-  const lastRow = sheet.getLastRow();
-  
-  const dataRange = sheet.getRange(5, 6, lastRow - 4, 5);
-  const values = dataRange.getValues();
-  
-  const data = [];
-  for (let i = 0; i < values.length; i++) {
-    const healthcareName = values[i][0];
-    const deviceSerialNumber = values[i][1];
-    const areaOfSpecialization = values[i][3];
-    const kLaserModel = values[i][4];
-    
-    if (healthcareName || deviceSerialNumber || areaOfSpecialization || kLaserModel) {
-      data.push({
-        healthcareName: healthcareName || "",
-        deviceSerialNumber: deviceSerialNumber || "",
-        areaOfSpecialization: areaOfSpecialization || "",
-        kLaserModel: kLaserModel || "",
-        rowIndex: i + 5
-      });
-    }
-  }
-  
-  return data;
+  const lastRow = sheet.getRange("F:F").getValues().filter(String).length + 4;
+  if (lastRow <= 4) return [];
+  const values = sheet.getRange(5, 6, lastRow - 4, 5).getValues();
+  return values
+    .map((row, index) => ({
+      healthcareName: row[0] || "",
+      deviceSerialNumber: row[1] || "",
+      areaOfSpecialization: row[3] || "",
+      kLaserModel: row[4] || "",
+      rowIndex: index + 5
+    }))
+    .filter(item => item.healthcareName || item.deviceSerialNumber || item.areaOfSpecialization || item.kLaserModel);
 }
 
+
 function updateFormHealthcareDropdown() {
-  const formId = 'YOUR_TRAINEE REGISTRATION_FORM_ID';
+  const formId = '1y8gBrxuKcTeppkMekkrK0MzbRRrEmO4MR9apXAkAFpA';
   const form = FormApp.openById(formId);
   
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -196,29 +185,4 @@ function deleteSetting(rowIndex, columnType) {
     message: `Deleted ${columnType} at row ${rowIndex} and shifted values up`,
     formUpdate: columnInfo.updateForm ? formUpdateResult : null
   };
-}
-
-function createSpreadsheetEditTrigger() {
-  const triggers = ScriptApp.getProjectTriggers();
-  for (let i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'onSpreadsheetEdit') {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
-  
-  ScriptApp.newTrigger('onSpreadsheetEdit')
-    .forSpreadsheet(SpreadsheetApp.getActive())
-    .onEdit()
-    .create();
-    
-  return "Edit trigger created successfully";
-}
-
-function onSpreadsheetEdit(e) {
-  if (e.range.getSheet().getName() === "Settings" && 
-      e.range.getColumn() === 6 && 
-      e.range.getRow() >= 5) {
-    
-    updateFormHealthcareDropdown();
-  }
 }
