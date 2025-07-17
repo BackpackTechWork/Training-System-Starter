@@ -9,51 +9,29 @@ function getQuestions() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const postTestSheet = ss.getSheetByName('Post-Test Questions');
   const refreshmentSheet = ss.getSheetByName('Refreshment Training Questions');
-  
-  // Get Post-Test Questions
-  const postTestLastRow = getLastRowWithData(postTestSheet, 'B');
-  const postTestQuestions = postTestSheet.getRange('B4:B' + postTestLastRow).getValues();
-  const postTestOptions = postTestSheet.getRange('C4:F' + postTestLastRow).getValues(); // Updated to C4:F
-  const postTestObjectives = postTestSheet.getRange('G4:G' + postTestLastRow).getValues();
-  
-  // Get Refreshment Training Questions
-  const refreshmentLastRow = getLastRowWithData(refreshmentSheet, 'B');
-  const refreshmentQuestions = refreshmentSheet.getRange('B4:B' + refreshmentLastRow).getValues();
-  const refreshmentOptions = refreshmentSheet.getRange('C4:F' + refreshmentLastRow).getValues(); // Updated to C4:F
-  const refreshmentObjectives = refreshmentSheet.getRange('G4:G' + refreshmentLastRow).getValues();
-  
-  // Format data for frontend
-  const postTestData = formatQuestionData(postTestQuestions, postTestOptions, postTestObjectives);
-  const refreshmentData = formatQuestionData(refreshmentQuestions, refreshmentOptions, refreshmentObjectives);
-  
+
+  const getSheetQuestions = (sheet) => {
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 4) return [];
+    const numRows = lastRow - 3;
+    const data = sheet.getRange(4, 2, numRows, 6).getValues();
+
+    return data
+      .filter(row => row[0] !== "")
+      .map(row => ({
+        question: row[0],
+        options: row.slice(1, 5),
+        objective: row[5]
+      }));
+  };
+
+  const postTestQuestions = getSheetQuestions(postTestSheet);
+  const refreshmentQuestions = getSheetQuestions(refreshmentSheet);
+
   return {
-    postTest: postTestData,
-    refreshment: refreshmentData
+    postTest: postTestQuestions,
+    refreshment: refreshmentQuestions
   };
 }
 
-function getLastRowWithData(sheet, column) {
-  const values = sheet.getRange(column + '1:' + column + sheet.getLastRow()).getValues();
-  for (let i = values.length - 1; i >= 0; i--) {
-    if (values[i][0] !== '') {
-      return i + 1; // +1 because array is 0-indexed
-    }
-  }
-  return 1;
-}
 
-function formatQuestionData(questions, options, objectives) {
-  const formattedData = [];
-  
-  for (let i = 0; i < questions.length; i++) {
-    if (questions[i][0] !== '') {
-      formattedData.push({
-        question: questions[i][0],
-        options: options[i],
-        objective: objectives[i][0]
-      });
-    }
-  }
-  
-  return formattedData;
-}
