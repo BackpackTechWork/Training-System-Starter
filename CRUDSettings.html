@@ -749,309 +749,315 @@
     </div>
     <? } ?>
 
-    <script>
-       
-      function hasEditSection() {
-        return document.querySelector('.section-header h2')?.textContent.includes('Add New Setting') || false;
-      }
+        <script>
 
-       
-      const hasEditAccess = <?= hasEditAccess ?> && hasEditSection();
-      
-       
-      document.addEventListener('DOMContentLoaded', function() {
-        loadSettingsData();
-        setupSidebar();
-      });
-      
-       
-      function loadSettingsData() {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('settingsTable').classList.add('hidden');
-        
-        google.script.run
-          .withSuccessHandler(displaySettingsData)
-          .withFailureHandler(showError)
-          .getSettingsData();
-      }
+          function hasEditSection() {
+            return document.querySelector('.section-header h2')?.textContent.includes('Add New Setting') || false;
+          }
 
-       
-      function setupSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('main-content');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
-        const toggleIcon = sidebarToggle.querySelector('i');
-        
-         
-        sidebarToggle.addEventListener('click', function() {
-          sidebar.classList.toggle('collapsed');
-          mainContent.classList.toggle('sidebar-collapsed');
-          
-          if (sidebar.classList.contains('collapsed')) {
-            toggleIcon.classList.remove('fa-chevron-left');
-            toggleIcon.classList.add('fa-chevron-right');
-          } else {
-            toggleIcon.classList.remove('fa-chevron-right');
-            toggleIcon.classList.add('fa-chevron-left');
-          }
-        });
-        
-         
-        sidebarMobileToggle.addEventListener('click', function() {
-          sidebar.classList.toggle('active');
-        });
-        
-         
-        document.addEventListener('click', function(event) {
-          const isMobile = window.innerWidth <= 992;
-          if (isMobile && 
-              !sidebar.contains(event.target) && 
-              !sidebarMobileToggle.contains(event.target) &&
-              sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
-          }
-        });
-        
-         
-        window.addEventListener('resize', function() {
-          if (window.innerWidth > 992) {
-            sidebar.classList.remove('active');
-          }
-        });
-      }
-      
-       
-      function displaySettingsData(data) {
-        const tableBody = document.getElementById('settingsData');
-        const canEdit = hasEditSection();
-        
-         
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('settingsTable').classList.remove('hidden');
-        
-         
-        tableBody.innerHTML = '';
-        
-         
-        if (data.length === 0) {
-          const colSpan = canEdit ? 5 : 4;
-          tableBody.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center">No settings data found</td></tr>';
-        } else {
-          data.forEach(function(row) {
-            const tr = document.createElement('tr');
-            
-             
-            const tdHealthcare = document.createElement('td');
-            tdHealthcare.textContent = row.healthcareName || '';
-            if (canEdit && row.healthcareName) {
-              const actionDiv = createCellActionButtons(row.rowIndex, 'Healthcare Name', row.healthcareName);
-              tdHealthcare.appendChild(actionDiv);
-            }
-            tr.appendChild(tdHealthcare);
-            
-             
-            const tdDevice = document.createElement('td');
-            tdDevice.textContent = row.deviceSerialNumber || '';
-            if (canEdit && row.deviceSerialNumber) {
-              const actionDiv = createCellActionButtons(row.rowIndex, 'Device Serial Number', row.deviceSerialNumber);
-              tdDevice.appendChild(actionDiv);
-            }
-            tr.appendChild(tdDevice);
-            
-             
-            const tdArea = document.createElement('td');
-            tdArea.textContent = row.areaOfSpecialization || '';
-            if (canEdit && row.areaOfSpecialization) {
-              const actionDiv = createCellActionButtons(row.rowIndex, 'Area of Specialization', row.areaOfSpecialization);
-              tdArea.appendChild(actionDiv);
-            }
-            tr.appendChild(tdArea);
-            
-             
-            const tdModel = document.createElement('td');
-            tdModel.textContent = row.kLaserModel || '';
-            if (canEdit && row.kLaserModel) {
-              const actionDiv = createCellActionButtons(row.rowIndex, 'K-Laser Model', row.kLaserModel);
-              tdModel.appendChild(actionDiv);
-            }
-            tr.appendChild(tdModel);
-            
-             
-            if (canEdit) {
-              const tdActions = document.createElement('td');
-              tdActions.className = 'text-center';
-              tr.appendChild(tdActions);
-            }
-            
-            tableBody.appendChild(tr);
+     
+          const hasEditAccess = <?= hasEditAccess ?> && hasEditSection();
+ 
+          const LOCAL_STORAGE_KEY = 'settingsData';
+
+          document.addEventListener('DOMContentLoaded', function() {
+            loadInitialSettings();
+            setupSidebar();
           });
-        }
-      }
-      
-       
-      function createCellActionButtons(rowIndex, columnType, currentValue) {
-        const actionDiv = document.createElement('div');
-        actionDiv.className = 'cell-actions mt-10';
+
+          function loadInitialSettings() {
+            const loading = document.getElementById('loading');
+            const settingsTable = document.getElementById('settingsTable');
+            
+            const localData = getLocalSettings();
+            
+            if (localData) {
+              console.log('Displaying data from local storage.');
+              displaySettingsData(localData);
+              loading.classList.add('hidden');
+              settingsTable.classList.remove('hidden');
+            } else {
+              console.log('No local data found. Fetching from server.');
+              loading.classList.remove('hidden');
+              settingsTable.classList.add('hidden');
+            }
+
+            google.script.run
+              .withSuccessHandler(handleServerData)
+              .withFailureHandler(showError)
+              .getSettingsData();
+          }
+
+          function handleServerData(data) {
+            console.log('Received data from server. Updating local storage and displaying.');
+            setLocalSettings(data); 
+            displaySettingsData(data); 
+          }
+
+          function getLocalSettings() {
+            try {
+              const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+              return data ? JSON.parse(data) : null;
+            } catch (e) {
+              console.error('Error reading from local storage:', e);
+              return null;
+            }
+          }
+
+ 
+          function setLocalSettings(data) {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+              console.error('Error writing to local storage:', e);
+            }
+          }
+
+          function setupSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
+            const toggleIcon = sidebarToggle.querySelector('i');
+
+            sidebarToggle.addEventListener('click', function() {
+              sidebar.classList.toggle('collapsed');
+              mainContent.classList.toggle('sidebar-collapsed');
+              
+              if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('fa-chevron-left');
+                toggleIcon.classList.add('fa-chevron-right');
+              } else {
+                toggleIcon.classList.remove('fa-chevron-right');
+                toggleIcon.classList.add('fa-chevron-left');
+              }
+            });
         
+            sidebarMobileToggle.addEventListener('click', function() {
+              sidebar.classList.toggle('active');
+            });
+
+            document.addEventListener('click', function(event) {
+              const isMobile = window.innerWidth <= 992;
+              if (isMobile && 
+                  !sidebar.contains(event.target) && 
+                  !sidebarMobileToggle.contains(event.target) &&
+                  sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+              }
+            });
+            
+            
+            window.addEventListener('resize', function() {
+              if (window.innerWidth > 992) {
+                sidebar.classList.remove('active');
+              }
+            });
+          }
+
+          function displaySettingsData(data) {
+            const tableBody = document.getElementById('settingsData');
+            const canEdit = hasEditSection();
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('settingsTable').classList.remove('hidden');
+            
+   
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+              const colSpan = canEdit ? 5 : 4;
+              tableBody.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center">No settings data found</td></tr>';
+            } else {
+              data.forEach(function(row) {
+                const tr = document.createElement('tr');
+
+                const tdHealthcare = document.createElement('td');
+                tdHealthcare.textContent = row.healthcareName || '';
+                if (canEdit && row.healthcareName) {
+                  const actionDiv = createCellActionButtons(row.rowIndex, 'Healthcare Name', row.healthcareName);
+                  tdHealthcare.appendChild(actionDiv);
+                }
+                tr.appendChild(tdHealthcare);
+
+                const tdDevice = document.createElement('td');
+                tdDevice.textContent = row.deviceSerialNumber || '';
+                if (canEdit && row.deviceSerialNumber) {
+                  const actionDiv = createCellActionButtons(row.rowIndex, 'Device Serial Number', row.deviceSerialNumber);
+                  tdDevice.appendChild(actionDiv);
+                }
+                tr.appendChild(tdDevice);
+
+                const tdArea = document.createElement('td');
+                tdArea.textContent = row.areaOfSpecialization || '';
+                if (canEdit && row.areaOfSpecialization) {
+                  const actionDiv = createCellActionButtons(row.rowIndex, 'Area of Specialization', row.areaOfSpecialization);
+                  tdArea.appendChild(actionDiv);
+                }
+                tr.appendChild(tdArea);
          
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-edit btn-sm';
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editBtn.title = 'Edit ' + columnType;  
-        editBtn.onclick = function(e) {
-          e.stopPropagation();
-          openEditModal(rowIndex, columnType, currentValue);
-        };
-        actionDiv.appendChild(editBtn);
+                const tdModel = document.createElement('td');
+                tdModel.textContent = row.kLaserModel || '';
+                if (canEdit && row.kLaserModel) {
+                  const actionDiv = createCellActionButtons(row.rowIndex, 'K-Laser Model', row.kLaserModel);
+                  tdModel.appendChild(actionDiv);
+                }
+                tr.appendChild(tdModel);
+
+                if (canEdit) {
+                  const tdActions = document.createElement('td');
+                  tdActions.className = 'text-center';
+                  tr.appendChild(tdActions);
+                }
+                
+                tableBody.appendChild(tr);
+              });
+            }
+          }
+
+          function createCellActionButtons(rowIndex, columnType, currentValue) {
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'cell-actions mt-10';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-edit btn-sm';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.title = 'Edit ' + columnType; 
+            editBtn.onclick = function(e) {
+              e.stopPropagation();
+              openEditModal(rowIndex, columnType, currentValue);
+            };
+            actionDiv.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger btn-sm';
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.title = 'Delete ' + columnType; 
+            deleteBtn.onclick = function(e) {
+              e.stopPropagation();
+              deleteSetting(rowIndex, columnType);
+            };
+            actionDiv.appendChild(deleteBtn);
+            
+            return actionDiv;
+          }
+
+          function openEditModal(rowIndex, columnType, currentValue) {
+            if (!hasEditSection()) return;
+            
+            document.getElementById('editModalTitle').textContent = 'Edit ' + columnType;
+            document.getElementById('editValue').value = currentValue;
+            document.getElementById('editRowIndex').value = rowIndex;
+            document.getElementById('editColumnType').value = columnType;
+            document.getElementById('editModal').classList.remove('hidden');
+          }
+          function closeEditModal() {
+            if (!hasEditSection()) return;
+            
+            document.getElementById('editModal').classList.add('hidden');
+          }
         
-         
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-danger btn-sm';
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-        deleteBtn.title = 'Delete ' + columnType;  
-        deleteBtn.onclick = function(e) {
-          e.stopPropagation();
-          deleteSetting(rowIndex, columnType);
-        };
-        actionDiv.appendChild(deleteBtn);
-        
-        return actionDiv;
-      }
+          function saveEdit() {
+            if (!hasEditSection()) return;
+            
+            const rowIndex = document.getElementById('editRowIndex').value;
+            const columnType = document.getElementById('editColumnType').value;
+            const value = document.getElementById('editValue').value.trim();
+            
+            if (!value) {
+              showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
+              return;
+            }
+
+            closeEditModal();
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('settingsTable').classList.add('hidden');
+            
+            google.script.run
+              .withSuccessHandler(function(result) {
+                showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+                loadInitialSettings(); 
+              })
+              .withFailureHandler(function(error) {
+                showError(error);
+                loadInitialSettings(); 
+              })
+              .updateSetting(rowIndex, columnType, value);
+          }
+   
+          function addSetting() {
+            if (!hasEditSection()) return;
+            
+            const type = document.getElementById('settingType').value;
+            const value = document.getElementById('settingValue').value.trim();
+            
+            if (!value) {
+              showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
+              return;
+            }
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('settingsTable').classList.add('hidden');
+            
+            google.script.run
+              .withSuccessHandler(function(result) {
+                showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+                document.getElementById('settingValue').value = '';
+                loadInitialSettings(); 
+              })
+              .withFailureHandler(function(error) {
+                showError(error);
+                loadInitialSettings(); 
+              })
+              .addSetting(type, value);
+          }
+
+          function deleteSetting(rowIndex, columnType) {
+            if (!hasEditSection()) return;
+            
+            if (!confirm('Are you sure you want to delete this ' + columnType + '?')) {
+              return;
+            }
       
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('settingsTable').classList.add('hidden');
+            
+            google.script.run
+              .withSuccessHandler(function(result) {
+                showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
+                loadInitialSettings(); 
+              })
+              .withFailureHandler(function(error) {
+                showError(error);
+                loadInitialSettings(); 
+              })
+              .deleteSetting(rowIndex, columnType);
+          }
+          function showNotification(message, type) {
+            const notificationDiv = document.getElementById('notification');
+            notificationDiv.innerHTML = `
+              <div class="notification notification-${type}">
+                <span>${message}</span>
+                <button class="notification-close" onclick="closeNotification()"><i class="fas fa-times"></i></button>
+              </div>
+            `;
+            
+            notificationDiv.classList.remove('hidden');
+
+            setTimeout(function() {
+              closeNotification();
+            }, 5000);
+          }
        
-      function openEditModal(rowIndex, columnType, currentValue) {
-        if (!hasEditSection()) return;
-        
-        document.getElementById('editModalTitle').textContent = 'Edit ' + columnType;
-        document.getElementById('editValue').value = currentValue;
-        document.getElementById('editRowIndex').value = rowIndex;
-        document.getElementById('editColumnType').value = columnType;
-        document.getElementById('editModal').classList.remove('hidden');
-      }
-      
-       
-      function closeEditModal() {
-        if (!hasEditSection()) return;
-        
-        document.getElementById('editModal').classList.add('hidden');
-      }
-      
-       
-      function saveEdit() {
-        if (!hasEditSection()) return;
-        
-        const rowIndex = document.getElementById('editRowIndex').value;
-        const columnType = document.getElementById('editColumnType').value;
-        const value = document.getElementById('editValue').value.trim();
-        
-        if (!value) {
-          showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
-          return;
-        }
-        
-         
-        closeEditModal();
-        
-         
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('settingsTable').classList.add('hidden');
-        
-        google.script.run
-          .withSuccessHandler(function(result) {
-            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
-            loadSettingsData();
-          })
-          .withFailureHandler(function(error) {
-            showError(error);
-            loadSettingsData();
-          })
-          .updateSetting(rowIndex, columnType, value);
-      }
-      
-       
-      function addSetting() {
-        if (!hasEditSection()) return;
-        
-        const type = document.getElementById('settingType').value;
-        const value = document.getElementById('settingValue').value.trim();
-        
-        if (!value) {
-          showNotification('<i class="fas fa-exclamation-triangle"></i> Please enter a value', 'error');
-          return;
-        }
-        
-         
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('settingsTable').classList.add('hidden');
-        
-        google.script.run
-          .withSuccessHandler(function(result) {
-            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
-            document.getElementById('settingValue').value = '';
-            loadSettingsData();
-          })
-          .withFailureHandler(function(error) {
-            showError(error);
-            loadSettingsData();
-          })
-          .addSetting(type, value);
-      }
-      
-       
-      function deleteSetting(rowIndex, columnType) {
-        if (!hasEditSection()) return;
-        
-        if (!confirm('Are you sure you want to delete this ' + columnType + '?')) {
-          return;
-        }
-        
-         
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('settingsTable').classList.add('hidden');
-        
-        google.script.run
-          .withSuccessHandler(function(result) {
-            showNotification('<i class="fas fa-check-circle"></i> ' + result.message, 'success');
-            loadSettingsData();
-          })
-          .withFailureHandler(function(error) {
-            showError(error);
-            loadSettingsData();
-          })
-          .deleteSetting(rowIndex, columnType);
-      }
-      
-       
-      function showNotification(message, type) {
-        const notificationDiv = document.getElementById('notification');
-        
-         
-        notificationDiv.innerHTML = `
-          <div class="notification notification-${type}">
-            <span>${message}</span>
-            <button class="notification-close" onclick="closeNotification()"><i class="fas fa-times"></i></button>
-          </div>
-        `;
-        
-        notificationDiv.classList.remove('hidden');
-        
-         
-        setTimeout(function() {
-          closeNotification();
-        }, 5000);
-      }
-      
-       
-      function closeNotification() {
-        document.getElementById('notification').classList.add('hidden');
-      }
-      
-       
-      function showError(error) {
-        document.getElementById('loading').classList.add('hidden');
-        showNotification('<i class="fas fa-exclamation-circle"></i> Error: ' + error.message, 'error');
-      }
-    </script>
+          function closeNotification() {
+            document.getElementById('notification').classList.add('hidden');
+          }
+
+          function showError(error) {
+            document.getElementById('loading').classList.add('hidden');
+            showNotification('<i class="fas fa-exclamation-circle"></i> Error: ' + error.message, 'error');
+          }
+        </script>
   </body>
 </html>
