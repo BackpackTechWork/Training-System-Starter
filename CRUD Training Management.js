@@ -4,365 +4,188 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-function getAllTrainings() {
-  try {
-    Logger.log("Starting getAllTrainings function");
-    
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    Logger.log("Active spreadsheet name: " + ss.getName());
-    
-    const allSheets = ss.getSheets();
-    Logger.log("All sheets in the spreadsheet:");
-    allSheets.forEach(sheet => Logger.log("- " + sheet.getName()));
-    
-    const sheet = ss.getSheetByName('All Trainings');
-    
-    if (!sheet) {
-      Logger.log("ERROR: 'All Trainings' sheet not found!");
-      return {
-        success: false,
-        error: "'All Trainings' sheet not found"
-      };
-    }
-    
-    Logger.log("Found 'All Trainings' sheet");
-    Logger.log("Sheet last row: " + sheet.getLastRow());
-    Logger.log("Sheet last column: " + sheet.getLastColumn());
-    
-    // Check if there's any data beyond the header rows
-    if (sheet.getLastRow() <= 3) {
-      Logger.log("No training data found in the sheet");
-      return {
-        success: true,
-        data: [],
-        count: 0,
-        message: "No training available"
-      };
-    }
-    
-    // Get timestamps to determine data range
-    Logger.log("Attempting to get range A4:A");
-    const timestampRange = sheet.getRange('A4:A');
-    const timestamps = timestampRange.getValues();
-    Logger.log("Raw timestamps data (first 5 rows):");
-    for (let i = 0; i < Math.min(5, timestamps.length); i++) {
-      Logger.log(`Row ${i+4}: ${JSON.stringify(timestamps[i])}`);
-    }
-    
-    // Filter out empty rows
-    const nonEmptyTimestamps = timestamps.filter(row => row[0] !== "");
-    Logger.log(`Found ${nonEmptyTimestamps.length} non-empty timestamp rows`);
-    
-    // Check if there are any non-empty rows
-    if (nonEmptyTimestamps.length === 0) {
-      Logger.log("No training data found after filtering");
-      return {
-        success: true,
-        data: [],
-        count: 0,
-        message: "No training available"
-      };
-    }
-    
-    // Calculate the last row with data
-    const lastRow = nonEmptyTimestamps.length + 3; // +3 because data starts at row 4
-    Logger.log(`Calculated lastRow: ${lastRow}`);
-    
-    // Get all columns of data
-    const numRows = lastRow - 3; // Number of rows to fetch
-    Logger.log(`Attempting to get range (4, 1, ${numRows}, 12)`); // Updated to include WhatsApp column (L)
-    
-    const data = sheet.getRange(4, 1, numRows, 12).getValues(); // Updated to include WhatsApp column (L)
-    Logger.log(`Retrieved ${data.length} rows of data`);
-    Logger.log("First few rows of retrieved data:");
-    for (let i = 0; i < Math.min(5, data.length); i++) {
-      Logger.log(`Row ${i+4}: ${JSON.stringify(data[i])}`);
-    }
-    
-    // Get the formulas for the gradebook column to extract the actual URLs
-    const formulas = sheet.getRange(4, 9, numRows, 1).getFormulas(); // Column 9 is the gradebook column
-    
-    // Map the data to a structured format with string conversion for dates
-    const mappedData = data.map((row, index) => {
-      try {
-        // Convert date objects to strings to ensure they serialize properly
-        const formatValue = (val) => {
-          if (val instanceof Date) {
-            return val.toISOString();
-          }
-          return val;
-        };
-        
-        // Extract the actual URL from the HYPERLINK formula if it exists
-        let gradebookLink = row[8]; // Default to the display value
-        
-        if (formulas[index][0]) {
-          const formula = formulas[index][0];
-          // Extract URL from HYPERLINK formula using regex
-          const match = formula.match(/HYPERLINK\("([^"]+)"/i);
-          if (match && match[1]) {
-            gradebookLink = match[1]; // Use the actual URL instead of the display text
-          }
-        }
-        
-        // Ensure deviceSerialNumber is a string
-        let deviceSerialNumber = row[6];
-        if (deviceSerialNumber !== null && deviceSerialNumber !== undefined) {
-          // Convert to string if it's not already
-          deviceSerialNumber = String(deviceSerialNumber);
-        }
-        
-        return {
-          timestamp: formatValue(row[0]),
-          trainingName: row[1],
-          trainer: row[2],
-          healthcareCentre: row[3],
-          startDateTime: formatValue(row[4]),
-          endDateTime: formatValue(row[5]),
-          deviceSerialNumber: deviceSerialNumber,
-          trainingType: row[7],
-          gradebookLink: gradebookLink,
-          trainingStatus: row[9],
-          whatsappLink: row[11], // Updated to column L (index 11)
-          rowIndex: index + 4 // Store the actual row index for updating later
-        };
-      } catch (error) {
-        Logger.log(`Error mapping row ${index + 4}: ${error.toString()}`);
-        // Return a basic object with the row index to avoid breaking the data structure
-        return {
-          rowIndex: index + 4,
-          error: error.toString(),
-          timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
-          trainingName: row[1] || "",
-          deviceSerialNumber: row[6] ? String(row[6]) : ""
-        };
+function getAllInitialData() {
+  Logger.log("Starting getAllInitialData function");
+
+  return Promise.allSettled([
+    Promise.resolve().then(getAllTrainings),
+    Promise.resolve().then(getParticipatingTrainees),
+    Promise.resolve().then(getDropdownOptions),
+    Promise.resolve().then(getCurrentUserEmail)
+  ]).then(results => {
+    const response = {
+      success: true,
+      data: {
+        trainings: null,
+        trainees: null,
+        dropdownOptions: null,
+        currentUserEmail: null
+      },
+      errors: {}
+    };
+
+    const keys = ['trainings', 'trainees', 'dropdownOptions', 'currentUserEmail'];
+
+    results.forEach((result, index) => {
+      const key = keys[index];
+      if (result.status === 'fulfilled') {
+        response.data[key] = result.value;
+      } else {
+        Logger.log(`Error getting ${key}: ${result.reason}`);
+        response.errors[key] = result.reason.toString();
+        response.data[key] = { success: false, error: result.reason.toString() };
       }
     });
-    
-    Logger.log(`Final mapped data has ${mappedData.length} items`);
-    if (mappedData.length > 0) {
-      Logger.log("First item in mapped data:");
-      Logger.log(JSON.stringify(mappedData[0]));
-    }
-    
-    // Return a plain object that can be easily serialized
-    return {
-      success: true,
-      data: mappedData,
-      count: mappedData.length
-    };
-    
-  } catch (error) {
-    Logger.log("ERROR in getAllTrainings: " + error.toString());
-    Logger.log("Stack trace: " + error.stack);
-    
-    // Return error information that can be easily serialized
+
+    Logger.log("getAllInitialData completed");
+    return response;
+  }).catch(error => {
+    Logger.log("ERROR in getAllInitialData: " + error.toString());
     return {
       success: false,
       error: error.toString(),
       stack: error.stack
     };
+  });
+}
+
+
+function getAllTrainings() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('All Trainings');
+    if (!sheet) return { success: false, error: "'All Trainings' sheet not found" };
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 3) return { success: true, data: [], count: 0, message: "No training available" };
+
+    const dataRange = sheet.getRange(4, 1, lastRow - 3, 12);
+    const data = dataRange.getValues();
+    const formulas = sheet.getRange(4, 9, lastRow - 3, 1).getFormulas();
+
+    const mappedData = data.reduce((acc, row, index) => {
+      if (!row[0]) return acc; 
+
+      const gradebookFormula = formulas[index][0];
+      const gradebookLink = gradebookFormula
+        ? (gradebookFormula.match(/HYPERLINK\("([^"]+)"/i) || [])[1] || row[8]
+        : row[8];
+
+      acc.push({
+        timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
+        trainingName: row[1],
+        trainer: row[2],
+        healthcareCentre: row[3],
+        startDateTime: row[4] instanceof Date ? row[4].toISOString() : row[4],
+        endDateTime: row[5] instanceof Date ? row[5].toISOString() : row[5],
+        deviceSerialNumber: String(row[6] || ''),
+        trainingType: row[7],
+        gradebookLink: gradebookLink,
+        trainingStatus: row[9],
+        whatsappLink: row[11],
+        rowIndex: index + 4
+      });
+      return acc;
+    }, []);
+
+    return { success: true, data: mappedData, count: mappedData.length };
+
+  } catch (error) {
+    return { success: false, error: error.toString(), stack: error.stack };
   }
 }
+
 
 function getParticipatingTrainees() {
   try {
-    Logger.log("Starting getParticipatingTrainees function");
-    
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName('Participating Trainees');
-    
-    if (!sheet) {
-      Logger.log("ERROR: 'Participating Trainees' sheet not found!");
-      return {
-        success: false,
-        error: "'Participating Trainees' sheet not found"
-      };
-    }
-    
-    Logger.log("Found 'Participating Trainees' sheet");
-    Logger.log("Sheet last row: " + sheet.getLastRow());
-    Logger.log("Sheet last column: " + sheet.getLastColumn());
-    
-    // Check if there's any data beyond the header rows
-    if (sheet.getLastRow() <= 3) {
-      Logger.log("No trainee data found in the sheet");
-      return {
-        success: true,
-        data: [],
-        count: 0,
-        message: "No training available"
-      };
-    }
-    
-    // Get timestamps to determine data range
-    Logger.log("Attempting to get range A4:A");
-    const timestampRange = sheet.getRange('A4:A');
-    const timestamps = timestampRange.getValues();
-    
-    // Filter out empty rows
-    const nonEmptyTimestamps = timestamps.filter(row => row[0] !== "");
-    Logger.log(`Found ${nonEmptyTimestamps.length} non-empty timestamp rows`);
-    
-    // Check if there are any non-empty rows
-    if (nonEmptyTimestamps.length === 0) {
-      Logger.log("No trainee data found after filtering");
-      return {
-        success: true,
-        data: [],
-        count: 0,
-        message: "No training available"
-      };
-    }
-    
-    // Calculate the last row with data
-    const lastRow = nonEmptyTimestamps.length + 3; // +3 because data starts at row 4
-    Logger.log(`Calculated lastRow: ${lastRow}`);
-    
-    // Get all columns of data
-    const numRows = lastRow - 3; // Number of rows to fetch
-    Logger.log(`Attempting to get range (4, 1, ${numRows}, 9)`); // Updated to include Remarks (column I)
-    
-    const data = sheet.getRange(4, 1, numRows, 9).getValues(); // Updated to include Remarks (column I)
-    Logger.log(`Retrieved ${data.length} rows of data`);
-    
-    // Get the formulas for the gradebook column to extract the actual URLs
-    const formulas = sheet.getRange(4, 6, numRows, 1).getFormulas(); // Column 6 is the gradebook column
-    
-    // Map the data to a structured format
-    const mappedData = data.map((row, index) => {
-      try {
-        // Convert date objects to strings to ensure they serialize properly
-        const formatValue = (val) => {
-          if (val instanceof Date) {
-            return val.toISOString();
-          }
-          return val;
-        };
-        
-        // Extract the actual URL from the HYPERLINK formula if it exists
-        let gradebookLink = row[5]; // Default to the display value
-        
-        if (formulas[index][0]) {
-          const formula = formulas[index][0];
-          // Extract URL from HYPERLINK formula using regex
-          const match = formula.match(/HYPERLINK\("([^"]+)"/i);
-          if (match && match[1]) {
-            gradebookLink = match[1]; // Use the actual URL instead of the display text
-          }
-        }
-        
-        // Set grade to "Ungraded" if missing
-        const grade = row[6] ? row[6] : "Ungraded";
-        
-        return {
-          timestamp: formatValue(row[0]),
-          traineeName: row[1],
-          traineeId: row[2],
-          icPassport: row[3],
-          trainingName: row[4],
-          gradebookLink: gradebookLink,
-          grade: grade,
-          affiliatedHealthcare: row[7], // Added Affiliated Healthcare
-          remarks: row[8] || "", // Added Remarks from column I
-          rowIndex: index + 4 // Store the actual row index for updating later
-        };
-      } catch (error) {
-        Logger.log(`Error mapping trainee row ${index + 4}: ${error.toString()}`);
-        // Return a basic object with the row index to avoid breaking the data structure
-        return {
-          rowIndex: index + 4,
-          error: error.toString(),
-          timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
-          traineeName: row[1] || "",
-          trainingName: row[4] || ""
-        };
-      }
-    });
-    
-    Logger.log(`Final mapped data has ${mappedData.length} items`);
-    
-    // Return a plain object that can be easily serialized
-    return {
-      success: true,
-      data: mappedData,
-      count: mappedData.length
-    };
-    
+    if (!sheet) return { success: false, error: "'Participating Trainees' sheet not found" };
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 3) return { success: true, data: [], count: 0, message: "No training available" };
+
+    const dataRange = sheet.getRange(4, 1, lastRow - 3, 9).getValues();
+    const formulas = sheet.getRange(4, 6, lastRow - 3, 1).getFormulas();
+
+    const mappedData = dataRange.reduce((acc, row, index) => {
+      if (!row[0]) return acc; 
+
+      const formula = formulas[index][0];
+      const gradebookLink = formula
+        ? (formula.match(/HYPERLINK\("([^"]+)"/i) || [])[1] || row[5]
+        : row[5];
+
+      acc.push({
+        timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
+        traineeName: row[1],
+        traineeId: row[2],
+        icPassport: row[3],
+        trainingName: row[4],
+        gradebookLink: gradebookLink,
+        grade: row[6] || "Ungraded",
+        affiliatedHealthcare: row[7],
+        remarks: row[8] || "",
+        rowIndex: index + 4
+      });
+      return acc;
+    }, []);
+
+    return { success: true, data: mappedData, count: mappedData.length };
+
   } catch (error) {
-    Logger.log("ERROR in getParticipatingTrainees: " + error.toString());
-    Logger.log("Stack trace: " + error.stack);
-    
-    // Return error information that can be easily serialized
-    return {
-      success: false,
-      error: error.toString(),
-      stack: error.stack
-    };
+    return { success: false, error: error.toString(), stack: error.stack };
   }
 }
 
-// Get dropdown options from Settings sheet
+
+
 function getDropdownOptions() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("dropdownOptions");
+
+
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const settingsSheet = ss.getSheetByName('Settings');
-    
-    if (!settingsSheet) {
-      Logger.log("ERROR: 'Settings' sheet not found!");
-      return {
-        success: false,
-        error: "Settings sheet not found"
-      };
-    }
-    
-    // Get trainer options (D4:D)
-    const trainerRange = settingsSheet.getRange('D4:D');
-    const trainerValues = trainerRange.getValues();
-    const trainers = trainerValues
-      .map(row => row[0])
-      .filter(value => value !== "");
-    
-    // Get healthcare centre options (F5:F)
-    const healthcareCentreRange = settingsSheet.getRange('F5:F');
-    const healthcareCentreValues = healthcareCentreRange.getValues();
-    const healthcareCentres = healthcareCentreValues
-      .map(row => row[0])
-      .filter(value => value !== "");
-    
-    // Get device serial number options (G5:G)
-    const deviceSerialRange = settingsSheet.getRange('G5:G');
-    const deviceSerialValues = deviceSerialRange.getValues();
-    const deviceSerials = deviceSerialValues
-      .map(row => row[0])
-      .filter(value => value !== "");
-    
-    // Get authorized emails for status editing (L5:L)
-    const authorizedEmailsRange = settingsSheet.getRange('L5:L');
-    const authorizedEmailsValues = authorizedEmailsRange.getValues();
-    const authorizedEmails = authorizedEmailsValues
-      .map(row => row[0])
-      .filter(value => value !== "");
-    
-    return {
+    const sheet = ss.getSheetByName('Settings');
+    if (!sheet) return { success: false, error: "'Settings' sheet not found" };
+
+    const lastRow = sheet.getLastRow();
+
+
+    const values = sheet.getRange(4, 4, lastRow - 3, 9).getValues(); 
+
+    const trainers = values.map(row => row[0]).filter(val => val !== "");
+    const healthcareCentres = values.map(row => row[2]).filter(val => val !== "");
+    const deviceSerials = values.map(row => row[3]).filter(val => val !== "");
+    const authorizedEmails = values.map(row => row[8]).filter(val => val !== "");
+
+    const result = {
       success: true,
       options: {
-        trainers: trainers,
-        healthcareCentres: healthcareCentres,
-        deviceSerials: deviceSerials,
-        authorizedEmails: authorizedEmails
+        trainers,
+        healthcareCentres,
+        deviceSerials,
+        authorizedEmails
       }
     };
+
+
+    cache.put("dropdownOptions", JSON.stringify(result), 300);
+
+    return result;
+
   } catch (error) {
-    Logger.log("ERROR in getDropdownOptions: " + error.toString());
-    return {
-      success: false,
-      error: error.toString()
-    };
+    return { success: false, error: error.toString() };
   }
 }
 
-// Get current user's email
+
+
 function getCurrentUserEmail() {
   try {
     return Session.getActiveUser().getEmail();
@@ -384,7 +207,7 @@ function updateTraining(rowIndex, updatedData) {
       };
     }
 
-    // Validate that rowIndex is within range
+
     if (rowIndex < 4 || rowIndex > sheet.getLastRow()) {
       return {
         success: false,
@@ -392,10 +215,10 @@ function updateTraining(rowIndex, updatedData) {
       };
     }
 
-    // Get current user email
+
     const userEmail = Session.getActiveUser().getEmail();
 
-    // Check if user is authorized to edit status
+
     let canEditStatus = false;
     if (updatedData.trainingStatus) {
       const settingsSheet = ss.getSheetByName('Settings');
@@ -417,7 +240,7 @@ function updateTraining(rowIndex, updatedData) {
       }
     }
 
-    // Update fields in All Trainings sheet (excluding training name)
+
     if (updatedData.trainer !== undefined) {
       sheet.getRange(rowIndex, 3).setValue(updatedData.trainer);
     }
