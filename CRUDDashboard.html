@@ -1171,26 +1171,22 @@
     </button>
   </div>
 
-  <script>
-     
+   <script>
+
     document.addEventListener('DOMContentLoaded', function() {
-       
+
       setupSidebar();
-      
-       
+
       loadDashboardData();
-      
-       
+    
       setupNotificationModal();
-      
-       
+
       setupScrollToTop();
       
-       
+
       setupRetryButtons();
     });
 
-     
     function setupSidebar() {
       try {
         const sidebar = document.getElementById('sidebar');
@@ -1198,30 +1194,26 @@
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebarMobileToggle = document.getElementById('sidebar-mobile-toggle');
         const toggleIcon = sidebarToggle.querySelector('i');
-        
-         
         sidebarToggle.addEventListener('click', function() {
           if (sidebar.classList.contains('collapsed')) {
-             
+        
             sidebar.classList.remove('collapsed');
             mainContent.classList.remove('sidebar-collapsed');
             toggleIcon.classList.remove('fa-chevron-right');
             toggleIcon.classList.add('fa-chevron-left');
           } else {
-             
+
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
             toggleIcon.classList.remove('fa-chevron-left');
             toggleIcon.classList.add('fa-chevron-right');
           }
         });
-        
-         
+
         sidebarMobileToggle.addEventListener('click', function() {
           sidebar.classList.toggle('active');
         });
-        
-         
+
         document.addEventListener('click', function(event) {
           const isMobile = window.innerWidth <= 992;
           if (isMobile && 
@@ -1231,8 +1223,7 @@
             sidebar.classList.remove('active');
           }
         });
-        
-         
+
         window.addEventListener('resize', function() {
           if (window.innerWidth > 992) {
             sidebar.classList.remove('active');
@@ -1244,46 +1235,54 @@
       }
     }
 
-     
-    function loadDashboardData() {
-       
+  function loadDashboardData() {
+    const localData = localStorage.getItem('dashboardData');
+
+    if (localData) {
+      console.log('Displaying dashboard from local storage');
+      const data = JSON.parse(localData);
+      updateNotifications(data.notifications);
+      updateTrainingsSection(data.trainings, data.trainingStats);
+      updateTraineesSection(data.traineeStats);
+      updateTrainersSection(data.trainerStats);
+  
+    } else {
+  
       showLoading();
-      
-       
-      google.script.run
-        .withSuccessHandler(function(data) {
-          try {
-             
-            updateNotifications(data.notifications);
-            updateTrainingsSection(data.trainings, data.trainingStats);
-            updateTraineesSection(data.traineeStats);
-            updateTrainersSection(data.trainerStats);
-            
-             
-            showToast('success', 'Dashboard Loaded', 'All dashboard data has been successfully loaded.');
-          } catch (error) {
-            console.error('Error processing dashboard data:', error);
-            showToast('error', 'Data Processing Error', 'There was an error processing the dashboard data: ' + error.message);
-          } finally {
-             
-            hideLoading();
-          }
-        })
-        .withFailureHandler(function(error) {
-          console.error('Error loading dashboard data:', error);
-          showToast('error', 'Loading Error', 'Failed to load dashboard data: ' + error.message);
-          
-           
-          document.getElementById('recent-trainings-error').style.display = 'block';
-          document.getElementById('trainers-error').style.display = 'block';
-          
-           
-          hideLoading();
-        })
-        .getDashboardData();
     }
 
-     
+    google.script.run
+      .withSuccessHandler(function(data) {
+        try {
+          updateNotifications(data.notifications);
+          updateTrainingsSection(data.trainings, data.trainingStats);
+          updateTraineesSection(data.traineeStats);
+          updateTrainersSection(data.trainerStats);
+
+          localStorage.setItem('dashboardData', JSON.stringify(data));
+
+          if (!localData) {
+            showToast('success', 'Dashboard Loaded', 'Dashboard data has been loaded.');
+          }
+        } catch (error) {
+          console.error('Error processing dashboard data:', error);
+          showToast('error', 'Processing Error', 'There was a problem processing dashboard data.');
+        } finally {
+          if (!localData) hideLoading();
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error('Error loading dashboard data:', error);
+        showToast('error', 'Loading Error', 'Failed to load dashboard data: ' + error.message);
+
+        document.getElementById('recent-trainings-error').style.display = 'block';
+        document.getElementById('trainers-error').style.display = 'block';
+
+        if (!localData) hideLoading();
+      })
+      .getDashboardData();
+  }
+
     function loadDashboardSection(section) {
       showLoading();
       
@@ -1332,7 +1331,7 @@
         .getDashboardData();
     }
 
-     
+   
     function setupRetryButtons() {
       document.getElementById('retry-trainings').addEventListener('click', function() {
         loadDashboardSection('trainings');
@@ -1343,17 +1342,14 @@
       });
     }
 
-     
     function showLoading() {
       document.getElementById('loading-overlay').classList.add('active');
     }
 
-     
     function hideLoading() {
       document.getElementById('loading-overlay').classList.remove('active');
     }
 
-     
     function setupNotificationModal() {
       try {
         const modal = document.getElementById('notification-modal');
@@ -1379,7 +1375,6 @@
       }
     }
 
-     
     function setupScrollToTop() {
       try {
         const scrollBtn = document.getElementById('scroll-top');
@@ -1400,20 +1395,16 @@
         });
       } catch (error) {
         console.error('Error setting up scroll to top button:', error);
-         
       }
     }
 
-     
     function showToast(type, title, message, duration = 5000) {
       try {
         const toastContainer = document.getElementById('toast-container');
-        
-         
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
-         
+
         let iconClass = '';
         switch(type) {
           case 'success':
@@ -1429,8 +1420,7 @@
             iconClass = 'fas fa-exclamation-triangle';
             break;
         }
-        
-         
+  
         toast.innerHTML = `
           <div class="toast-icon">
             <i class="${iconClass}"></i>
@@ -1446,30 +1436,26 @@
             <div class="toast-progress-bar"></div>
           </div>
         `;
-        
-         
+
         toastContainer.appendChild(toast);
-        
-         
+
         const closeBtn = toast.querySelector('.toast-close');
         closeBtn.addEventListener('click', function() {
           removeToast(toast);
         });
-        
-         
+  
         setTimeout(function() {
           removeToast(toast);
         }, duration);
       } catch (error) {
         console.error('Error showing toast notification:', error);
-         
+
         if (type === 'error') {
           alert(`${title}: ${message}`);
         }
       }
     }
 
-     
     function removeToast(toast) {
       toast.style.animation = 'slideOut 0.3s ease forwards';
       setTimeout(function() {
@@ -1477,14 +1463,12 @@
       }, 300);
     }
 
-     
     function updateNotifications(notifications) {
       try {
-         
+    
         const notificationCount = document.getElementById('notification-count');
         notificationCount.textContent = notifications.length;
-        
-         
+
         const groupedByHospital = {};
         
         notifications.forEach(notification => {
@@ -1495,7 +1479,7 @@
           groupedByHospital[hospital].push(notification);
         });
         
-         
+
         const hospitalCardsContainer = document.getElementById('hospital-cards-container');
         hospitalCardsContainer.innerHTML = '';
         
@@ -1509,13 +1493,11 @@
           `;
           return;
         }
-        
-         
+
         Object.entries(groupedByHospital).forEach(([hospital, trainees]) => {
           const hospitalCard = document.createElement('div');
           hospitalCard.className = 'hospital-card';
-          
-           
+     
           const hospitalHeader = document.createElement('div');
           hospitalHeader.className = 'hospital-header';
           hospitalHeader.innerHTML = `
@@ -1529,12 +1511,11 @@
               <i class="fas fa-chevron-down"></i>
             </button>
           `;
-          
-           
+
           const hospitalContent = document.createElement('div');
           hospitalContent.className = 'hospital-content';
           
-           
+      
           const tableContainer = document.createElement('div');
           tableContainer.className = 'table-container';
           
@@ -1570,8 +1551,7 @@
           
           tableContainer.appendChild(table);
           hospitalContent.appendChild(tableContainer);
-          
-           
+
           hospitalHeader.addEventListener('click', function() {
             hospitalContent.classList.toggle('active');
             const icon = hospitalHeader.querySelector('.hospital-action i');
@@ -1587,19 +1567,17 @@
               text.textContent = 'View Details';
             }
           });
-          
-           
+   
           hospitalCard.appendChild(hospitalHeader);
           hospitalCard.appendChild(hospitalContent);
-          
-           
+      
           hospitalCardsContainer.appendChild(hospitalCard);
         });
       } catch (error) {
         console.error('Error updating notifications:', error);
         showToast('error', 'Notification Error', 'Failed to update notifications: ' + error.message);
         
-         
+ 
         const hospitalCardsContainer = document.getElementById('hospital-cards-container');
         hospitalCardsContainer.innerHTML = `
           <div class="error-state">
@@ -1611,70 +1589,58 @@
         `;
       }
     }
-    
-     
+
     function getDaysLeftClass(daysLeft) {
       if (daysLeft < 0) return 'days-overdue';
       if (daysLeft === 0) return 'days-today';
       if (daysLeft <= 30) return 'days-critical';
       return '';
     }
-    
-     
+ 
     function getDaysLeftText(daysLeft) {
       if (daysLeft < 0) return `${Math.abs(daysLeft)} (Overdue)`;
       if (daysLeft === 0) return '0 (Today)';
       return daysLeft.toString();
     }
 
-     
+
     function createChipsFromText(text, iconClass) {
+      const container = document.createElement('div');
+      container.className = 'chip-container';
       try {
-        const container = document.createElement('div');
-        container.className = 'chip-container';
-        
-        if (!text) return container;
-        
-        const items = text.split(',').map(item => item.trim()).filter(item => item);
-        
+        const safeText = (typeof text === 'string') ? text : String(text ?? '');
+        const items = safeText.split(',').map(item => item.trim()).filter(item => item);
         items.forEach(item => {
           const chip = document.createElement('span');
           chip.className = 'chip';
-          
-          const icon = document.createElement('i');
-          icon.className = iconClass;
-          chip.appendChild(icon);
-          
-          const textNode = document.createTextNode(item);
-          chip.appendChild(textNode);
-          
+          if (iconClass) {
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            chip.appendChild(icon);
+          }
+          chip.appendChild(document.createTextNode(item));
           container.appendChild(chip);
         });
-        
-        return container;
       } catch (error) {
         console.error('Error creating chips:', error);
-         
-        const container = document.createElement('div');
-        container.textContent = text || '';
-        return container;
+        container.textContent = String(text ?? '');
       }
+      return container;
     }
 
-     
+
+ 
     function updateTrainingsSection(trainings, stats) {
       try {
-         
+
         document.getElementById('total-trainings').textContent = stats.total;
         document.getElementById('trainings-in-progress').textContent = stats.inProgress;
         document.getElementById('trainings-completed').textContent = stats.completed;
         document.getElementById('trainings-canceled').textContent = stats.canceled;
         document.getElementById('trainings-rescheduled').textContent = stats.rescheduled;
-        
-         
+
         document.getElementById('recent-trainings-error').style.display = 'none';
-        
-         
+
         const tableBody = document.getElementById('recent-trainings-body');
         tableBody.innerHTML = '';
         
@@ -1692,8 +1658,7 @@
         
         trainings.forEach(training => {
           const row = document.createElement('tr');
-          
-           
+
           const properties = [
             { key: 'name', className: '', isChip: false, iconClass: '' },
             { key: 'trainer', className: '', isChip: false, iconClass: '' },
@@ -1712,7 +1677,7 @@
             }
             
             if (prop.isChip && training[prop.key]) {
-               
+
               const chipContainer = createChipsFromText(training[prop.key], prop.iconClass);
               cell.appendChild(chipContainer);
             } else {
@@ -1727,13 +1692,11 @@
       } catch (error) {
         console.error('Error updating trainings section:', error);
         showToast('error', 'Training Data Error', 'Failed to update training data: ' + error.message);
-        
-         
+
         document.getElementById('recent-trainings-error').style.display = 'block';
       }
     }
 
-     
     function getStatusClass(status) {
       if (!status) return '';
       
@@ -1753,7 +1716,6 @@
       }
     }
 
-     
     function updateTraineesSection(stats) {
       try {
         document.getElementById('total-trainees').textContent = stats.total;
@@ -1765,13 +1727,11 @@
       }
     }
 
-     
     function updateTrainersSection(trainers) {
       try {
         const container = document.getElementById('trainers-container');
         container.innerHTML = '';
-        
-         
+
         document.getElementById('trainers-error').style.display = 'none';
         
         if (!trainers || trainers.length === 0) {
@@ -1802,8 +1762,7 @@
       } catch (error) {
         console.error('Error updating trainers section:', error);
         showToast('error', 'Trainer Data Error', 'Failed to update trainer data: ' + error.message);
-        
-         
+
         document.getElementById('trainers-error').style.display = 'block';
       }
     }
