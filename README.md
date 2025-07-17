@@ -4,7 +4,7 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12&height=200&section=header&text=Training%20System&fontSize=50&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Comprehensive%20Training%20Management%20Platform&descAlignY=55&descSize=18" width="100%"/>
 
 <!-- Animated Logo/Icon -->
-<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=30&duration=3000&pause=1000&color=573FD7&center=true&vCenter=true&multiline=true&width=600&height=100&lines=🎓+Training+System;Built+with+Google+Apps+Script;Streamline+Your+Training+Programs" alt="Typing SVG" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=30&duration=3000&pause=1000&color=573FD7&center=true&vCenter=true&multiline=true&width=600&height=100&lines=🎓+Training+System;Built+with+Google+Apps+Script" alt="Typing SVG" />
 
 <!-- Animated Badges -->
 <p align="center">
